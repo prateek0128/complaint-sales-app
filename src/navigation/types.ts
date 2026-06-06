@@ -5,6 +5,7 @@ export type RootStackParamList = {
   Welcome: undefined;
   LoginUserId: undefined;
   LoginPhone: undefined;
+  PhoneSignIn: undefined;
   Registration: undefined;
   Dashboard: undefined;
   RaiseComplaint: undefined;

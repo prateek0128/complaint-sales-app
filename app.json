@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Maheshwari Complaints",
-    "slug": "maheshwari-complaints",
+    "slug": "complaint-sales",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/frame5.png",
@@ -27,6 +27,12 @@
     },
     "web": {
       "favicon": "./assets/frame5.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "98b8c9b1-d192-4cef-97ed-ea2ec0fb6601"
+      }
+    },
+    "owner": "miiscoorg"
   }
 }

@@ -5,7 +5,6 @@ import { AppButton, Field, Screen } from "../components/ui";
 import { loginWithUserId, getInfo } from "../api/api";
 import { colors } from "../constants/theme";
 import type { RootStackParamList } from "../navigation/types";
-import { pickObject } from "../utils/data";
 import { storage } from "../utils/storage";
 
 type Props = NativeStackScreenProps<RootStackParamList, "LoginUserId">;
@@ -23,26 +22,38 @@ export default function LoginUserIdScreen({ navigation }: Props) {
     setLoading(true);
     try {
       const response = await loginWithUserId(phoneNumber, password);
-      const body = pickObject<Record<string, unknown>>(response.data);
-      const userId = Number(body.id ?? body.userId ?? body.customerId ?? body.technicianId ?? 0);
-      const accountType = Number(body.accountType ?? body.type ?? 0);
-      const token = String(body.token ?? body.accessToken ?? "");
+      const body = response.data as Record<string, unknown>;
+
+      // Mirrors Flutter loginWithUserID check: message === 'Login successful!'
+      if (body.message !== "Login successful!") {
+        Alert.alert("Failed", "Your Number is not Registered");
+        return;
+      }
+
+      const userId = Number(body.userId ?? 0);
+      const accountType = Number(body.accountType ?? 0);
+      const token = String(body.token ?? "");
+      const savedPhone = String(body.phoneNumber ?? phoneNumber);
+
       await storage.setUserId(userId);
       await storage.setAccountType(accountType);
-      await storage.setPhoneNumber(phoneNumber);
+      await storage.setPhoneNumber(savedPhone);
       await storage.setToken(token);
       if (userId) {
         const info = await getInfo(userId, accountType, phoneNumber);
-        const details = pickObject<Record<string, unknown>>(info.data);
-        await storage.setInfoName(String(details.name ?? `${details.firstName ?? ""} ${details.lastName ?? ""}`.trim()));
-        await storage.setInfoEmail(String(details.email ?? ""));
-        await storage.setInfoNumber(String(details.contact ?? details.phoneNumber ?? phoneNumber));
-        await storage.setInfoAddress(String(details.location ?? details.address ?? ""));
-        await storage.setInfoProfile(String(details.profileImage ?? details.profilePicture ?? ""));
+        const infoBody = info.data as Record<string, unknown>;
+        const details = Array.isArray(infoBody.Details)
+          ? (infoBody.Details[0] as Record<string, unknown>)
+          : {};
+        await storage.setInfoName(`${details.First_Name ?? ""} ${details.Last_Name ?? ""}`.trim());
+        await storage.setInfoEmail(String(details.Email ?? ""));
+        await storage.setInfoNumber(String(details.Contact ?? phoneNumber));
+        await storage.setInfoAddress(String(details.Location ?? ""));
+        await storage.setInfoProfile(String(details.Profile_Picture ?? ""));
       }
       navigation.replace("Dashboard");
-    } catch (error) {
-      Alert.alert("Login failed", "Unable to login. Please check details and try again.");
+    } catch {
+      Alert.alert("Error", "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }

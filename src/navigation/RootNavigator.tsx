@@ -6,6 +6,7 @@ import ComplaintDetailsScreen from "../screens/ComplaintDetailsScreen";
 import FeedbackScreen from "../screens/FeedbackScreen";
 import HomeScreen from "../screens/HomeScreen";
 import LoginPhoneScreen from "../screens/LoginPhoneScreen";
+import PhoneSignInScreen from "../screens/PhoneSignInScreen";
 import LoginUserIdScreen from "../screens/LoginUserIdScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import RaiseComplaintScreen from "../screens/RaiseComplaintScreen";
@@ -44,6 +45,7 @@ export default function RootNavigator() {
       <Stack.Screen name="Welcome" component={WelcomeScreen} />
       <Stack.Screen name="LoginUserId" component={LoginUserIdScreen} />
       <Stack.Screen name="LoginPhone" component={LoginPhoneScreen} />
+      <Stack.Screen name="PhoneSignIn" component={PhoneSignInScreen} />
       <Stack.Screen name="Registration" component={RegistrationScreen} />
       <Stack.Screen name="Dashboard" component={DashboardTabs} />
       <Stack.Screen name="RaiseComplaint" component={RaiseComplaintScreen} />

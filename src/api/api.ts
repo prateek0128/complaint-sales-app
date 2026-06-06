@@ -23,6 +23,8 @@ export async function loginWithPhone(phoneNumber: string) {
   return api.post(URLS.login, { phoneNumber });
 }
 
+
+
 export async function registerCustomer(data: {
   firstName: string;
   lastName: string;

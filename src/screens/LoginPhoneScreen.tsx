@@ -1,40 +1,20 @@
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { useState } from "react";
-import { Alert, ScrollView, StyleSheet, Text } from "react-native";
-import { loginWithPhone } from "../api/api";
-import { AppButton, Field, Screen } from "../components/ui";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Screen } from "../components/ui";
 import { colors } from "../constants/theme";
 import type { RootStackParamList } from "../navigation/types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "LoginPhone">;
 
 export default function LoginPhoneScreen({ navigation }: Props) {
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const submit = async () => {
-    if (phoneNumber.length < 10) {
-      Alert.alert("Alert", "Enter a valid mobile number.");
-      return;
-    }
-    setLoading(true);
-    try {
-      await loginWithPhone(phoneNumber);
-      Alert.alert("OTP sent", "Continue with the OTP flow from your backend response.");
-      navigation.navigate("LoginUserId");
-    } catch {
-      Alert.alert("Unable to send OTP", "Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <Screen>
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>Login with Phone</Text>
-        <Field label="Mobile Number" value={phoneNumber} onChangeText={setPhoneNumber} placeholder="Enter mobile number" keyboardType="number-pad" maxLength={10} />
-        <AppButton title="Send OTP" loading={loading} onPress={submit} />
+        <Text style={styles.info}>Tap below to sign in securely using your phone number.</Text>
+        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("PhoneSignIn")}>
+          <Text style={styles.buttonLabel}>Sign In with Phone Number</Text>
+        </TouchableOpacity>
       </ScrollView>
     </Screen>
   );
@@ -43,13 +23,34 @@ export default function LoginPhoneScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   content: {
     flexGrow: 1,
-    justifyContent: "center"
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24
   },
   title: {
     color: colors.text,
     fontSize: 26,
     fontWeight: "900",
-    marginBottom: 24,
+    marginBottom: 12,
     textAlign: "center"
+  },
+  info: {
+    color: colors.muted,
+    fontSize: 14,
+    textAlign: "center",
+    marginBottom: 32
+  },
+  button: {
+    backgroundColor: colors.red,
+    borderRadius: 15,
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    alignItems: "center",
+    width: "100%"
+  },
+  buttonLabel: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "700"
   }
 });
