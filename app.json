@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "Maheshwari Complaints",
+    "slug": "maheshwari-complaints",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/frame5.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/frameSplash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#111111"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "org.maheshwariinfotech.quickcomplaint"
+    },
+    "android": {
+      "package": "org.maheshwariinfotech.quickcomplaint",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/frame5.png",
+        "backgroundColor": "#111111"
+      }
+    },
+    "web": {
+      "favicon": "./assets/frame5.png"
+    }
+  }
+}
