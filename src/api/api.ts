@@ -59,6 +59,10 @@ export async function fetchCustomerComplaints(customerId: number) {
   return api.get(`${URLS.fetchAllComplaint}id=${customerId}`);
 }
 
+export async function fetchAssignedTechDetails(complaintId: number) {
+  return api.get(`${URLS.assignTechDetails}id=${complaintId}`);
+}
+
 export async function fetchTechnicianComplaints(technicianId: number) {
   return api.get(`${URLS.fetchAllComplaintTechnician}id=${technicianId}`);
 }

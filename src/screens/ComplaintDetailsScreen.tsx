@@ -2,7 +2,7 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import * as Linking from "expo-linking";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
-import { deleteComplaint, fetchComplaintDetails, generateInvoice } from "../api/api";
+import { deleteComplaint, fetchComplaintDetails, fetchAssignedTechDetails, generateInvoice } from "../api/api";
 import { AppButton, Panel, Screen } from "../components/ui";
 import { colors } from "../constants/theme";
 import type { RootStackParamList } from "../navigation/types";
@@ -15,7 +15,11 @@ export default function ComplaintDetailsScreen({ route, navigation }: Props) {
   const [complaint, setComplaint] = useState<Complaint | null>(route.params?.complaint ?? null);
   const [accountType, setAccountType] = useState(0);
   const [selectedParts, setSelectedParts] = useState<Record<string, number>>({});
+  const [technicianID, setTechnicianID] = useState<number | null>(null);
+  const [technicianName, setTechnicianName] = useState<string | null>(null);
+  const [technicianContact, setTechnicianContact] = useState<string | null>(null);
 
+  // Fetch complaint details
   useEffect(() => {
     void (async () => {
       setAccountType(await storage.getAccountType());
@@ -29,6 +33,26 @@ export default function ComplaintDetailsScreen({ route, navigation }: Props) {
       }
     })();
   }, [route.params?.complaintId]);
+
+  // Fetch assigned technician details when status is InProgress
+  useEffect(() => {
+    if (complaint?.status !== "InProgress") return;
+    const id = complaint?.complaintId ?? route.params?.complaintId;
+    if (!id) return;
+    void (async () => {
+      try {
+        const techRes = await fetchAssignedTechDetails(Number(id));
+        const tech = techRes.data?.TechnicicanDetails?.[0];
+        if (tech) {
+          setTechnicianID(tech.Technician_ID);
+          setTechnicianName(`${tech.First_Name ?? ""} ${tech.Last_Name ?? ""}`.trim());
+          setTechnicianContact(tech.Contact ?? null);
+        }
+      } catch {
+        // Leave name/contact as null if endpoint is unavailable.
+      }
+    })();
+  }, [complaint?.status, complaint?.complaintId, route.params?.complaintId]);
 
   const complaintId = complaint?.complaintId ?? route.params?.complaintId ?? "NA";
   const created = formatDateTime(complaint?.createdAt);
@@ -81,7 +105,13 @@ export default function ComplaintDetailsScreen({ route, navigation }: Props) {
         {complaint?.itemImage ? <Image source={{ uri: complaint.itemImage }} style={styles.heroImage} /> : null}
 
         {accountType === 0 ? (
-          <CustomerSection complaint={complaint} navigation={navigation} />
+          <CustomerSection
+            complaint={complaint}
+            navigation={navigation}
+            technicianID={technicianID}
+            technicianName={technicianName}
+            technicianContact={technicianContact}
+          />
         ) : (
           <TechnicianSection complaint={complaint} products={products} selectedParts={selectedParts} setSelectedParts={setSelectedParts} createInvoice={createInvoice} />
         )}
@@ -90,19 +120,32 @@ export default function ComplaintDetailsScreen({ route, navigation }: Props) {
   );
 }
 
-function CustomerSection({ complaint, navigation }: { complaint: Complaint | null; navigation: Props["navigation"] }) {
-  const technicianId = complaint?.technicianId;
+function CustomerSection({
+  complaint,
+  navigation,
+  technicianID,
+  technicianName,
+  technicianContact,
+}: {
+  complaint: Complaint | null;
+  navigation: Props["navigation"];
+  technicianID: number | null;
+  technicianName: string | null;
+  technicianContact: string | null;
+}) {
   return (
     <View style={{ gap: 14 }}>
       {complaint?.status === "InProgress" ? (
         <Panel>
           <Text style={styles.sectionTitle}>Technician is allocated.</Text>
-          <Info label="Technician ID" value={String(technicianId ?? "NA")} />
+          <Info label="Technician ID" value={String(technicianID ?? "NA")} />
+          <Info label="Technician Name" value={technicianName ?? "NA"} />
+          <Info label="Technician Contact" value={technicianContact ?? "NA"} />
           <Info label="OTP" value={String(complaint?.otp ?? "NA")} bold />
         </Panel>
       ) : null}
       {complaint?.status === "Completed" ? (
-        <AppButton title="Give Feedback" icon="star-outline" onPress={() => navigation.navigate("Feedback", { complaintId: complaint?.complaintId, technicianId })} />
+        <AppButton title="Give Feedback" icon="star-outline" onPress={() => navigation.navigate("Feedback", { complaintId: complaint?.complaintId, technicianId: technicianID ?? undefined })} />
       ) : null}
     </View>
   );
@@ -164,86 +207,20 @@ function Info({ label, value, bold, color, onPress }: { label: string; value: st
 }
 
 const styles = StyleSheet.create({
-  content: {
-    gap: 14,
-    paddingBottom: 36
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingTop: 12
-  },
-  title: {
-    color: colors.text,
-    fontSize: 22,
-    fontWeight: "900"
-  },
-  back: {
-    color: colors.text,
-    fontWeight: "800"
-  },
-  delete: {
-    color: colors.red,
-    fontWeight: "800"
-  },
-  infoRow: {
-    paddingVertical: 8,
-    gap: 4
-  },
-  infoLabel: {
-    color: colors.muted,
-    fontSize: 13
-  },
-  infoValue: {
-    color: colors.text,
-    fontSize: 16,
-    lineHeight: 22
-  },
-  bold: {
-    fontWeight: "900"
-  },
-  heroImage: {
-    width: "100%",
-    height: 210,
-    borderRadius: 12,
-    backgroundColor: colors.panel
-  },
-  sectionTitle: {
-    color: colors.text,
-    fontSize: 18,
-    fontWeight: "900",
-    marginBottom: 8,
-    textAlign: "center"
-  },
-  partRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingVertical: 10,
-    borderBottomColor: colors.border,
-    borderBottomWidth: 1
-  },
-  partName: {
-    color: colors.text,
-    fontWeight: "800"
-  },
-  partDesc: {
-    color: colors.muted,
-    fontSize: 12
-  },
-  qty: {
-    width: 64,
-    height: 42,
-    borderColor: colors.border,
-    borderWidth: 1,
-    color: colors.text,
-    borderRadius: 8,
-    textAlign: "center"
-  },
-  muted: {
-    color: colors.muted,
-    textAlign: "center",
-    paddingVertical: 12
-  }
+  content: { gap: 14, paddingBottom: 36 },
+  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingTop: 12 },
+  title: { color: colors.text, fontSize: 22, fontWeight: "900" },
+  back: { color: colors.text, fontWeight: "800" },
+  delete: { color: colors.red, fontWeight: "800" },
+  infoRow: { paddingVertical: 8, gap: 4 },
+  infoLabel: { color: colors.muted, fontSize: 13 },
+  infoValue: { color: colors.text, fontSize: 16, lineHeight: 22 },
+  bold: { fontWeight: "900" },
+  heroImage: { width: "100%", height: 210, borderRadius: 12, backgroundColor: colors.panel },
+  sectionTitle: { color: colors.text, fontSize: 18, fontWeight: "900", marginBottom: 8, textAlign: "center" },
+  partRow: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 10, borderBottomColor: colors.border, borderBottomWidth: 1 },
+  partName: { color: colors.text, fontWeight: "800" },
+  partDesc: { color: colors.muted, fontSize: 12 },
+  qty: { width: 64, height: 42, borderColor: colors.border, borderWidth: 1, color: colors.text, borderRadius: 8, textAlign: "center" },
+  muted: { color: colors.muted, textAlign: "center", paddingVertical: 12 }
 });

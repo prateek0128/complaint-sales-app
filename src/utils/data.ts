@@ -5,6 +5,8 @@ export type Complaint = {
   customerId?: number | string;
   customerName?: string;
   technicianId?: number | string;
+  technicianName?: string;
+  technicianContact?: string;
   description?: string;
   status?: string;
   item?: string;
