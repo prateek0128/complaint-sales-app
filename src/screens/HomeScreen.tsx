@@ -30,9 +30,10 @@ export default function HomeScreen({ navigation }: Props) {
       setAccountType(type);
       const info = await getInfo(userId, type, phone);
       const details = pickObject<Record<string, unknown>>(info.data);
-      const displayName = String(details.name ?? `${details.firstName ?? ""} ${details.lastName ?? ""}`.trim() ?? "");
+      // Backend returns First_Name, Last_Name, Profile_Picture (capital keys)
+      const displayName = `${details.First_Name ?? ""} ${details.Last_Name ?? ""}`.trim();
       setName(displayName || (await storage.getInfoName()));
-      setProfile(String(details.profileImage ?? details.profilePicture ?? ""));
+      setProfile(String(details.Profile_Picture ?? ""))
       const response = type === 0 ? await fetchCustomerComplaints(userId) : await fetchTechnicianComplaints(userId);
       setComplaints(pickList(response.data));
     } catch {
