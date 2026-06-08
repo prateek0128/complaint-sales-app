@@ -50,13 +50,12 @@ export default function PhoneSignInScreen({ navigation }: Props) {
     fetchId();
   }, []);
 
-  const handleMessage = async (event: { nativeEvent: { data: string } }) => {
+ const handleMessage = async (event: { nativeEvent: { data: string } }) => {
     const encodedJWT = event.nativeEvent.data;
     if (!encodedJWT || processing) return;
 
     setProcessing(true);
     try {
-      // Decode JWT payload — phone_no and country_code are directly in the payload
       const parts = encodedJWT.split(".");
       if (parts.length !== 3) {
         Alert.alert("Login Failed", "Invalid token received.");
@@ -65,40 +64,35 @@ export default function PhoneSignInScreen({ navigation }: Props) {
       }
 
       const payload = JSON.parse(decodeBase64(parts[1]));
-      const phoneNumber: string = `${payload.country_code ?? ""}${payload.phone_no ?? ""}`.trim();
+      
+      // FIX: use only phone_no (without country code) to match what's stored in DB
+      const rawPhone: string = String(payload.phone_no ?? "").trim();
 
-      if (!phoneNumber) {
+      if (!rawPhone) {
         Alert.alert("Login Failed", "Could not retrieve phone number.");
         navigation.goBack();
         return;
       }
 
-      // POST { phoneNumber } to user/accountLogin
-      // Mirrors Flutter: loginPhoneRequest(phone) → _dio.post(URLConstant.login, data: {'phoneNumber': phone})
-      const response = await loginWithPhone(phoneNumber);
+      const response = await loginWithPhone(rawPhone);
       const body = response.data as Record<string, unknown>;
 
-      // Step 4: Check message — mirrors Flutter: result?.message == 'Login successful!'
       if (body.message !== "Login successful!") {
-        Alert.alert("Failed", "Your Number is not Register");
+        Alert.alert("Failed", "Your Number is not Registered");
         navigation.goBack();
         return;
       }
 
-      // Step 5: Save prefs — mirrors Flutter setCheckLoginPreference
-      // Flutter model: { message, userId, accountType, token, phonenumber }
       const userId = Number(body.userId ?? 0);
       const accountType = Number(body.accountType ?? 0);
       const token = String(body.token ?? "");
-      const savedPhone = String(body.phonenumber ?? phoneNumber);
+      const savedPhone = String(body.phonenumber ?? rawPhone); // backend returns it too
 
       await storage.setUserId(userId);
       await storage.setAccountType(accountType);
       await storage.setToken(token);
       await storage.setPhoneNumber(savedPhone);
 
-      // Step 6: Call getInfo — mirrors Flutter getInfoRequest + setGetInfoPreference
-      // Response: { Details: [{ First_Name, Last_Name, Profile_Picture, Email, Contact, Location }] }
       if (userId) {
         const infoRes = await getInfo(userId, accountType, savedPhone);
         const infoBody = infoRes.data as Record<string, unknown>;
