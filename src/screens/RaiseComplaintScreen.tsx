@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { fetchItemCategories, raiseComplaint, UploadImage } from "../api/api";
 import { AppButton, Field, Screen } from "../components/ui";
-import { colors } from "../constants/theme";
+import { colors, radius, spacing, typography } from "../constants/theme";
 import type { RootStackParamList } from "../navigation/types";
 import { storage } from "../utils/storage";
 
@@ -82,28 +82,47 @@ export default function RaiseComplaintScreen({ navigation }: Props) {
   return (
     <Screen>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>ADD COMPLAINT</Text>
-        <Field label="Name" value={customerName} onChangeText={setCustomerName} placeholder="Enter your name" />
-        <Field label="Complaint Description" value={description} onChangeText={setDescription} placeholder="Enter complaint description" multiline />
-        <Field label="Address" value={address} onChangeText={setAddress} placeholder="Enter address" multiline />
-        <Field label="Contact" value={contact} onChangeText={setContact} placeholder="Enter contact" keyboardType="number-pad" maxLength={10} />
-        <Field label="Item Type" value={item} onChangeText={setItem} placeholder="Enter item type" />
-        {items.length ? (
-          <View style={styles.chips}>
-            {items.map(value => (
-              <Pressable key={value} style={styles.chip} onPress={() => setItem(value)}>
-                <Text style={styles.chipText}>{value}</Text>
-              </Pressable>
-            ))}
-          </View>
-        ) : null}
-        <ImagePickerButton title="Attach Item Image" image={itemImage} onPress={() => pickImage("item")} />
-        <Pressable style={styles.warranty} onPress={() => setWarranty(value => !value)}>
-          <Text style={styles.warrantyText}>Product in Warranty?</Text>
-          <Text style={styles.warrantyText}>{warranty ? "Yes" : "No"}</Text>
-        </Pressable>
-        {warranty ? <ImagePickerButton title="Attach Bill Receipt" image={billImage} onPress={() => pickImage("bill")} /> : null}
-        <AppButton title="Submit Complaint" loading={loading} onPress={submit} />
+        <View style={styles.header}>
+          <Text style={styles.title}>New Complaint</Text>
+          <Text style={styles.subtitle}>Fill in the details below to raise a new service request.</Text>
+        </View>
+
+        <View style={styles.section}>
+          <Field label="Name" value={customerName} onChangeText={setCustomerName} placeholder="Enter your name" />
+          <Field label="Contact" value={contact} onChangeText={setContact} placeholder="Enter contact" keyboardType="number-pad" maxLength={10} />
+          <Field label="Address" value={address} onChangeText={setAddress} placeholder="Enter address" multiline />
+        </View>
+
+        <View style={styles.section}>
+          <Field label="Complaint Description" value={description} onChangeText={setDescription} placeholder="Enter complaint description" multiline style={[styles.textArea, { minHeight: 100 }]} />
+          
+          <Field label="Item Type" value={item} onChangeText={setItem} placeholder="Select or enter item type" />
+          {items.length ? (
+            <View style={styles.chips}>
+              {items.map(value => (
+                <Pressable key={value} style={[styles.chip, item === value && styles.chipActive]} onPress={() => setItem(value)}>
+                  <Text style={[styles.chipText, item === value && styles.chipTextActive]}>{value}</Text>
+                </Pressable>
+              ))}
+            </View>
+          ) : null}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Attachments</Text>
+          <ImagePickerButton title="Attach Item Image" image={itemImage} onPress={() => pickImage("item")} />
+          
+          <Pressable style={styles.warranty} onPress={() => setWarranty(value => !value)}>
+            <Text style={styles.warrantyText}>Product in Warranty?</Text>
+            <View style={[styles.toggle, warranty && styles.toggleActive]}>
+              <Text style={styles.toggleText}>{warranty ? "YES" : "NO"}</Text>
+            </View>
+          </Pressable>
+          
+          {warranty ? <ImagePickerButton title="Attach Bill Receipt" image={billImage} onPress={() => pickImage("bill")} /> : null}
+        </View>
+
+        <AppButton title="Submit Complaint" loading={loading} onPress={submit} style={styles.submitBtn} />
       </ScrollView>
     </Screen>
   );
@@ -112,60 +131,116 @@ export default function RaiseComplaintScreen({ navigation }: Props) {
 function ImagePickerButton({ title, image, onPress }: { title: string; image: UploadImage | null; onPress: () => void }) {
   return (
     <View style={styles.imageRow}>
+      <AppButton title={image ? "Change Image" : title} icon="camera" variant={image ? "secondary" : "outline"} onPress={onPress} style={{ flex: 1 }} />
       {image ? <Image source={{ uri: image.uri }} style={styles.preview} /> : null}
-      <AppButton title={title} icon="camera-outline" onPress={onPress} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   content: {
-    paddingBottom: 36
+    paddingBottom: spacing.xxl
+  },
+  header: {
+    marginBottom: spacing.xl,
+    marginTop: spacing.md,
   },
   title: {
+    ...typography.heading1,
     color: colors.text,
-    fontSize: 22,
-    fontWeight: "900",
-    textAlign: "center",
-    marginVertical: 14
+  },
+  subtitle: {
+    ...typography.body1,
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
+  },
+  section: {
+    backgroundColor: colors.panel,
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: spacing.md,
+  },
+  sectionTitle: {
+    ...typography.heading3,
+    marginBottom: spacing.md,
+  },
+  textArea: {
+    textAlignVertical: "top",
+    paddingTop: spacing.md,
   },
   chips: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 16
+    gap: spacing.xs,
+    marginTop: -spacing.sm,
+    marginBottom: spacing.md
   },
   chip: {
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: colors.black
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    backgroundColor: colors.panelAlt
+  },
+  chipActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   chipText: {
-    color: colors.text,
-    fontSize: 12
+    ...typography.caption,
+    color: colors.textSecondary,
+  },
+  chipTextActive: {
+    color: colors.white,
+    fontWeight: "700",
   },
   imageRow: {
-    gap: 12,
-    marginBottom: 18
+    flexDirection: "row",
+    gap: spacing.md,
+    marginBottom: spacing.md,
+    alignItems: "center"
   },
   preview: {
-    width: 120,
-    height: 120,
-    borderRadius: 8
+    width: 60,
+    height: 60,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   warranty: {
     flexDirection: "row",
     justifyContent: "space-between",
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: colors.panel,
-    marginBottom: 18
+    alignItems: "center",
+    paddingVertical: spacing.md,
+    borderTopWidth: 1,
+    borderColor: colors.border,
+    marginTop: spacing.sm,
   },
   warrantyText: {
-    color: colors.text,
-    fontWeight: "800"
+    ...typography.body1,
+    fontWeight: "600",
+  },
+  toggle: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.pill,
+    backgroundColor: colors.panelAlt,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  toggleActive: {
+    backgroundColor: colors.success,
+    borderColor: colors.success,
+  },
+  toggleText: {
+    ...typography.caption,
+    color: colors.white,
+    fontWeight: "800",
+  },
+  submitBtn: {
+    marginTop: spacing.md,
   }
 });

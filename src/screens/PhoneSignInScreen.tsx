@@ -109,8 +109,10 @@ export default function PhoneSignInScreen({ navigation }: Props) {
 
       navigation.replace("Dashboard");
     } catch (err) {
+      const serverMessage =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
       console.error("PhoneSignIn error:", err);
-      Alert.alert("Login Failed", "Unable to login. Please try again.");
+      Alert.alert("Login Failed", serverMessage ?? "Unable to login. Please try again.");
       navigation.goBack();
     } finally {
       setProcessing(false);

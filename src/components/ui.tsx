@@ -1,27 +1,50 @@
 import { ReactNode } from "react";
-import { ActivityIndicator, Image, Pressable, StyleSheet, Text, TextInput, TextInputProps, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, TextInput, TextInputProps, View, ViewProps } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, radius } from "../constants/theme";
+import { colors, radius, spacing, typography, shadows } from "../constants/theme";
 
-export function Screen({ children }: { children: ReactNode }) {
-  return <View style={styles.screen}>{children}</View>;
+export function Screen({ children, style }: { children: ReactNode; style?: any }) {
+  return <View style={[styles.screen, style]}>{children}</View>;
 }
 
 export function AppButton({
   title,
   onPress,
   loading,
-  icon
+  icon,
+  variant = "primary",
+  style,
 }: {
   title: string;
   onPress: () => void;
   loading?: boolean;
   icon?: keyof typeof Ionicons.glyphMap;
+  variant?: "primary" | "secondary" | "outline" | "danger";
+  style?: any;
 }) {
+  const getButtonStyle = () => {
+    switch (variant) {
+      case "secondary": return styles.buttonSecondary;
+      case "outline": return styles.buttonOutline;
+      case "danger": return styles.buttonDanger;
+      case "primary":
+      default: return styles.buttonPrimary;
+    }
+  };
+
+  const getTextColor = () => {
+    if (variant === "outline") return colors.primaryLight;
+    return colors.white;
+  };
+
   return (
-    <Pressable style={({ pressed }) => [styles.button, pressed && styles.pressed]} onPress={onPress} disabled={loading}>
-      {loading ? <ActivityIndicator color="#fff" /> : icon ? <Ionicons name={icon} color="#fff" size={20} /> : null}
-      <Text style={styles.buttonText}>{title}</Text>
+    <Pressable 
+      style={({ pressed }) => [styles.buttonBase, getButtonStyle(), pressed && styles.pressed, style]} 
+      onPress={onPress} 
+      disabled={loading}
+    >
+      {loading ? <ActivityIndicator color={getTextColor()} /> : icon ? <Ionicons name={icon} color={getTextColor()} size={20} /> : null}
+      <Text style={[styles.buttonText, { color: getTextColor() }]}>{title}</Text>
     </Pressable>
   );
 }
@@ -31,7 +54,7 @@ export function Field({ label, ...props }: TextInputProps & { label: string }) {
     <View style={styles.fieldWrap}>
       <Text style={styles.label}>{label}</Text>
       <TextInput
-        placeholderTextColor="#8d8d99"
+        placeholderTextColor={colors.textSecondary}
         style={styles.input}
         autoCapitalize="none"
         {...props}
@@ -40,8 +63,20 @@ export function Field({ label, ...props }: TextInputProps & { label: string }) {
   );
 }
 
-export function Panel({ children }: { children: ReactNode }) {
-  return <View style={styles.panel}>{children}</View>;
+export function Panel({ children, style }: { children: ReactNode; style?: any }) {
+  return <View style={[styles.panel, style]}>{children}</View>;
+}
+
+export function Card({ children, style, onPress }: { children: ReactNode; style?: any; onPress?: () => void }) {
+  const Container = onPress ? Pressable : View;
+  return (
+    <Container 
+      style={({ pressed }: any) => [styles.card, pressed && onPress && styles.pressed, style]} 
+      onPress={onPress}
+    >
+      {children}
+    </Container>
+  );
 }
 
 export function Avatar({ uri, size = 72 }: { uri?: string; size?: number }) {
@@ -53,49 +88,77 @@ export const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.background,
-    padding: 16
+    padding: spacing.md
   },
   panel: {
     backgroundColor: colors.panel,
     borderColor: colors.border,
     borderWidth: 1,
     borderRadius: radius.md,
-    padding: 14
+    padding: spacing.md,
+    ...shadows.sm,
   },
-  fieldWrap: {
-    gap: 8,
-    marginBottom: 16
-  },
-  label: {
-    color: colors.text,
-    fontWeight: "700",
-    fontSize: 15
-  },
-  input: {
-    minHeight: 50,
+  card: {
+    backgroundColor: colors.panel,
+    borderRadius: radius.lg,
+    padding: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius.pill,
-    paddingHorizontal: 16,
-    color: colors.text,
-    backgroundColor: colors.black
+    marginBottom: spacing.md,
+    ...shadows.md,
   },
-  button: {
+  fieldWrap: {
+    gap: spacing.sm,
+    marginBottom: spacing.md
+  },
+  label: {
+    ...typography.body2,
+    fontWeight: "600",
+    color: colors.textSecondary,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  input: {
     minHeight: 52,
-    borderRadius: radius.pill,
-    backgroundColor: colors.red,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    color: colors.text,
+    backgroundColor: colors.panelAlt,
+    ...typography.body1,
+  },
+  buttonBase: {
+    minHeight: 52,
+    borderRadius: radius.md,
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
-    gap: 8,
-    paddingHorizontal: 18
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    ...shadows.sm,
+  },
+  buttonPrimary: {
+    backgroundColor: colors.primary,
+  },
+  buttonSecondary: {
+    backgroundColor: colors.panelAlt,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  buttonOutline: {
+    backgroundColor: colors.transparent,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  buttonDanger: {
+    backgroundColor: colors.error,
   },
   buttonText: {
-    color: colors.text,
-    fontWeight: "800",
-    fontSize: 16
+    ...typography.button,
   },
   pressed: {
-    opacity: 0.78
+    opacity: 0.8,
+    transform: [{ scale: 0.98 }]
   }
 });

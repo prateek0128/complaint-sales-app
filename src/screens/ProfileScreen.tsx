@@ -4,8 +4,9 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import * as Linking from "expo-linking";
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { Avatar, Panel, Screen } from "../components/ui";
-import { colors } from "../constants/theme";
+import { Ionicons } from "@expo/vector-icons";
+import { Avatar, Card, Screen } from "../components/ui";
+import { colors, radius, spacing, typography } from "../constants/theme";
 import type { DashboardTabParamList, RootStackParamList } from "../navigation/types";
 import { storage } from "../utils/storage";
 
@@ -33,23 +34,36 @@ export default function ProfileScreen({ navigation }: Props) {
     <Screen>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.profile}>
-          <Avatar uri={profile} size={96} />
-          <Text style={styles.name}>{name || "User"}</Text>
-          <Text style={styles.email}>{email}</Text>
+          <Avatar uri={profile} size={100} />
+          <View style={styles.profileInfo}>
+            <Text style={styles.name}>{name || "User"}</Text>
+            <Text style={styles.email}>{email || "No email provided"}</Text>
+          </View>
         </View>
-        <Panel>
-          <Text style={styles.panelTitle}>About App</Text>
+        
+        <Card>
+          <View style={styles.panelHeader}>
+            <Ionicons name="information-circle-outline" size={24} color={colors.primaryLight} />
+            <Text style={styles.panelTitle}>About App</Text>
+          </View>
           <Text style={styles.copy}>Maheshwari Infotech Complaint App</Text>
           <Text style={styles.muted}>This app helps customers register complaints, track technician visits, and receive service updates.</Text>
-          <Text style={styles.muted}>App Version: 1.0.0</Text>
-        </Panel>
-        <Panel>
-          <Text style={styles.panelTitle}>Help & Support</Text>
-          <Pressable onPress={() => Linking.openURL("tel:+917409548907")}>
-            <Text style={styles.link}>Contact Us: 7409548907</Text>
+          <Text style={styles.version}>Version: 1.0.0</Text>
+        </Card>
+        
+        <Card>
+          <View style={styles.panelHeader}>
+            <Ionicons name="help-buoy-outline" size={24} color={colors.primaryLight} />
+            <Text style={styles.panelTitle}>Help & Support</Text>
+          </View>
+          <Pressable style={styles.contactRow} onPress={() => Linking.openURL("tel:+917409548907")}>
+            <Ionicons name="call" size={20} color={colors.success} />
+            <Text style={styles.link}>Contact Us: +91 7409548907</Text>
           </Pressable>
-        </Panel>
-        <Pressable style={styles.logout} onPress={logout}>
+        </Card>
+        
+        <Pressable style={({ pressed }) => [styles.logout, pressed && styles.pressed]} onPress={logout}>
+          <Ionicons name="log-out-outline" size={24} color={colors.error} />
           <Text style={styles.logoutText}>Logout</Text>
         </Pressable>
       </ScrollView>
@@ -59,51 +73,81 @@ export default function ProfileScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   content: {
-    gap: 18,
-    paddingTop: 32
+    gap: spacing.md,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.xxl,
   },
   profile: {
     alignItems: "center",
-    gap: 8,
-    marginBottom: 12
+    gap: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  profileInfo: {
+    alignItems: "center",
+    gap: 4,
   },
   name: {
+    ...typography.heading2,
     color: colors.text,
-    fontSize: 20,
-    fontWeight: "900"
   },
   email: {
-    color: colors.muted
+    ...typography.body1,
+    color: colors.textSecondary,
+  },
+  panelHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
   },
   panelTitle: {
-    color: colors.red,
-    fontWeight: "900",
-    fontSize: 16,
-    marginBottom: 10
+    ...typography.heading3,
+    color: colors.primaryLight,
   },
   copy: {
+    ...typography.body1,
+    fontWeight: "700",
     color: colors.text,
-    fontWeight: "800",
-    marginBottom: 8
+    marginBottom: spacing.xs,
   },
   muted: {
+    ...typography.body2,
+    color: colors.textSecondary,
+    lineHeight: 22,
+    marginBottom: spacing.md,
+  },
+  version: {
+    ...typography.caption,
     color: colors.muted,
-    lineHeight: 21,
-    marginBottom: 6
+  },
+  contactRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
   },
   link: {
-    color: colors.green,
-    fontWeight: "800",
-    paddingVertical: 8
+    ...typography.body1,
+    color: colors.success,
+    fontWeight: "700",
   },
   logout: {
     backgroundColor: colors.panel,
-    borderRadius: 12,
-    padding: 18
+    borderRadius: radius.md,
+    padding: spacing.md,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginTop: spacing.sm,
   },
   logoutText: {
-    color: colors.red,
-    fontWeight: "900",
-    fontSize: 16
+    ...typography.button,
+    color: colors.error,
+  },
+  pressed: {
+    opacity: 0.8,
   }
 });

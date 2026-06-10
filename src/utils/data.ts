@@ -23,23 +23,44 @@ export type Complaint = {
   productsAssigned?: Array<{ repairPart?: string; description?: string; quantityAssigned?: number }>;
 };
 
-// Maps raw MySQL column names (PascalCase/snake_case) → camelCase Complaint type
-function mapComplaint(raw: Record<string, unknown>): Complaint {
-  return {
+export function mapComplaint(raw: Record<string, unknown>): Complaint {
+  const productsRaw = Array.isArray(raw.ProductsAssigned) ? raw.ProductsAssigned : (Array.isArray(raw.productsAssigned) ? raw.productsAssigned : undefined);
+  
+  const mappedProducts = productsRaw?.map((p: any) => ({
+    repairPart: p.Repair_Part ?? p.repairPart,
+    description: p.Description ?? p.description,
+    quantityAssigned: p.Quantity_Assigned ?? p.quantityAssigned,
+    wireLength: p.Wire_Length ?? p.wireLength
+  }));
+
+  const complaint: any = {
     complaintId:   raw.Complaint_Id   ?? raw.complaintId,
     customerId:    raw.Customer_Id    ?? raw.customerId,
     customerName:  raw.Customer_Name  ?? raw.customerName  ?? String(raw.Customer_Name ?? ""),
     description:   raw.Description    ?? raw.description,
     status:        raw.Status         ?? raw.status,
     item:          raw.Item           ?? raw.item,
+    itemType:      raw.Item_Type      ?? raw.itemType,
     itemImage:     raw.Item_Image     ?? raw.itemImage,
     billImage:     raw.Bill_Image     ?? raw.billImage,
     address:       raw.Address        ?? raw.address,
+    location:      raw.Location       ?? raw.location,
     contact:       raw.Contact        ?? raw.contact,
+    email:         raw.Email          ?? raw.email,
     otp:           raw.Otp            ?? raw.otp,
-    createdAt:     raw.CreatedAt      ?? raw.createdAt,
+    createdAt:     raw.CreatedAt      ?? raw.createdAt      ?? raw.Created_At,
     updatedAt:     raw.UpdatedAt      ?? raw.updatedAt,
-  } as Complaint;
+    productsAssigned: mappedProducts,
+  };
+
+  // Remove undefined properties so spreading doesn't overwrite existing valid data
+  Object.keys(complaint).forEach(key => {
+    if (complaint[key as keyof typeof complaint] === undefined) {
+      delete complaint[key as keyof typeof complaint];
+    }
+  });
+
+  return complaint as unknown as Complaint;
 }
 
 export function pickList(data: unknown): Complaint[] {
@@ -72,10 +93,18 @@ export function pickList(data: unknown): Complaint[] {
 
 export function pickObject<T extends Record<string, unknown>>(data: unknown): T {
   const value = data as Record<string, unknown>;
-  // getInfo returns { Details: [{ First_Name, Last_Name, Profile_Picture, ... }] }
-  if (Array.isArray(value.Details) && value.Details.length > 0) {
-    return value.Details[0] as T;
+  // Envelopes that wrap a single object inside an array.
+  // getInfo       → { Details: [...] }
+  // complaint/:id → { ComplaintDetails: [...] }   (note PascalCase in backend)
+  // assigned-tech → { TechnicicanDetails: [...] }  (typo preserved from backend)
+  const arrayEnvelopes = ["Details", "ComplaintDetails", "TechnicicanDetails", "TechnicianDetails", "result"];
+  for (const key of arrayEnvelopes) {
+    const candidate = value[key];
+    if (Array.isArray(candidate) && candidate.length > 0 && typeof candidate[0] === "object") {
+      return candidate[0] as T;
+    }
   }
+  // Envelopes that wrap a single object directly under `data`.
   if (value.data && typeof value.data === "object" && !Array.isArray(value.data)) {
     return value.data as T;
   }

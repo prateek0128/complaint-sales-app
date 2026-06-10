@@ -1,4 +1,6 @@
 export const BASE_URL = "https://api.maheshwariinfotechmtr.com/";
+// For local testing, uncomment the LAN URL below and rebuild.
+// export const BASE_URL = "http://192.168.1.43:5000/";
 
 export const URLS = {
   login: "user/accountLogin",

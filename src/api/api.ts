@@ -5,13 +5,14 @@ import { storage } from "../utils/storage";
 export type UploadImage = { uri: string; name: string; type: string };
 
 const api = axios.create({
-  baseURL: BASE_URL,
-  validateStatus: status => status < 500
+  baseURL: BASE_URL
 });
 
 api.interceptors.request.use(async config => {
   const token = await storage.getToken();
-  config.headers.Authorization = token ? `Bearer ${token}` : "";
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
   return config;
 });
 

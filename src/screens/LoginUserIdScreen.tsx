@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { AppButton, Field, Screen } from "../components/ui";
 import { loginWithUserId, getInfo } from "../api/api";
-import { colors } from "../constants/theme";
+import { colors, spacing, typography } from "../constants/theme";
 import type { RootStackParamList } from "../navigation/types";
 import { storage } from "../utils/storage";
 
@@ -52,8 +52,11 @@ export default function LoginUserIdScreen({ navigation }: Props) {
         await storage.setInfoProfile(String(details.Profile_Picture ?? ""));
       }
       navigation.replace("Dashboard");
-    } catch {
-      Alert.alert("Error", "Something went wrong. Please try again.");
+
+    } catch (err) {
+      const serverMessage =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      Alert.alert("Error", serverMessage ?? "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -63,10 +66,35 @@ export default function LoginUserIdScreen({ navigation }: Props) {
     <Screen>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <Text style={styles.title}>Log in using your registered mobile number.</Text>
-          <Field label="User ID" value={phoneNumber} onChangeText={setPhoneNumber} placeholder="Enter mobile number" keyboardType="number-pad" maxLength={10} />
-          <Field label="Password" value={password} onChangeText={setPassword} placeholder="Enter password" secureTextEntry />
-          <AppButton title="Continue" loading={loading} onPress={submit} />
+          <View style={styles.header}>
+            <Text style={styles.title}>Welcome Back</Text>
+            <Text style={styles.subtitle}>Log in using your registered mobile number and password.</Text>
+          </View>
+          
+          <View style={styles.form}>
+            <Field 
+              label="User ID" 
+              value={phoneNumber} 
+              onChangeText={setPhoneNumber} 
+              placeholder="Enter mobile number" 
+              keyboardType="number-pad" 
+              maxLength={10} 
+            />
+            <Field 
+              label="Password" 
+              value={password} 
+              onChangeText={setPassword} 
+              placeholder="Enter password" 
+              secureTextEntry 
+            />
+            <AppButton 
+              title="Sign In" 
+              icon="log-in-outline" 
+              loading={loading} 
+              onPress={submit} 
+              style={styles.submitBtn} 
+            />
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>
@@ -76,14 +104,30 @@ export default function LoginUserIdScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   content: {
     flexGrow: 1,
-    justifyContent: "center"
+    justifyContent: "center",
+    paddingVertical: spacing.xxl,
+  },
+  header: {
+    marginBottom: spacing.xl,
   },
   title: {
-    color: colors.text,
-    fontSize: 20,
-    fontWeight: "800",
-    textAlign: "center",
-    lineHeight: 28,
-    marginBottom: 34
+    ...typography.heading1,
+    color: colors.primaryLight,
+    marginBottom: spacing.xs,
+  },
+  subtitle: {
+    ...typography.body1,
+    color: colors.textSecondary,
+    lineHeight: 24,
+  },
+  form: {
+    backgroundColor: colors.panel,
+    padding: spacing.lg,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  submitBtn: {
+    marginTop: spacing.md,
   }
 });

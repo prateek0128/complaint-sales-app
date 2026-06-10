@@ -1,7 +1,7 @@
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { ImageBackground, StyleSheet, Text, View } from "react-native";
 import { AppButton } from "../components/ui";
-import { colors } from "../constants/theme";
+import { colors, spacing, typography } from "../constants/theme";
 import type { RootStackParamList } from "../navigation/types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Welcome">;
@@ -11,11 +11,32 @@ export default function WelcomeScreen({ navigation }: Props) {
     <ImageBackground source={require("../../assets/frameBg.png")} resizeMode="cover" style={styles.root}>
       <View style={styles.overlay} />
       <View style={styles.content}>
-        <Text style={styles.title}>Quick Complaint</Text>
+        <View style={styles.header}>
+          <Text style={styles.title}>Maheshwari</Text>
+          <Text style={styles.subtitle}>Service Portal</Text>
+        </View>
         <Text style={styles.copy}>Register service complaints, track technician visits, and manage updates from one place.</Text>
-        <AppButton title="Login with User ID" icon="log-in-outline" onPress={() => navigation.navigate("LoginUserId")} />
-        <AppButton title="Login with Phone" icon="call-outline" onPress={() => navigation.navigate("LoginPhone")} />
-        <AppButton title="New Registration" icon="person-add-outline" onPress={() => navigation.navigate("Registration")} />
+        
+        <View style={styles.actions}>
+          <AppButton 
+            title="Login with Phone" 
+            icon="call" 
+            variant="primary"
+            onPress={() => navigation.navigate("LoginPhone")} 
+          />
+          <AppButton 
+            title="Login with User ID" 
+            icon="person" 
+            variant="secondary"
+            onPress={() => navigation.navigate("LoginUserId")} 
+          />
+          <AppButton 
+            title="Create an Account" 
+            icon="person-add" 
+            variant="outline"
+            onPress={() => navigation.navigate("Registration")} 
+          />
+        </View>
       </View>
     </ImageBackground>
   );
@@ -27,27 +48,32 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end"
   },
   overlay: {
-    position: "absolute",
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-    backgroundColor: "rgba(0,0,0,0.58)"
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(18, 18, 26, 0.75)" // darker overlay matching new theme
   },
   content: {
-    gap: 14,
-    padding: 20,
-    paddingBottom: 44
+    padding: spacing.xl,
+    paddingBottom: spacing.xxl,
+  },
+  header: {
+    marginBottom: spacing.md,
   },
   title: {
-    color: colors.text,
-    fontSize: 34,
-    fontWeight: "900"
+    ...typography.heading1,
+    color: colors.primaryLight,
+  },
+  subtitle: {
+    ...typography.heading2,
+    color: colors.white,
+    marginTop: -spacing.xs,
   },
   copy: {
-    color: colors.muted,
-    fontSize: 16,
-    lineHeight: 23,
-    marginBottom: 8
+    ...typography.body1,
+    color: colors.textSecondary,
+    lineHeight: 24,
+    marginBottom: spacing.xl,
+  },
+  actions: {
+    gap: spacing.md,
   }
 });

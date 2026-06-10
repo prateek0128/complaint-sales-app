@@ -6,7 +6,7 @@ import { deleteComplaint, fetchComplaintDetails, fetchAssignedTechDetails, gener
 import { AppButton, Panel, Screen } from "../components/ui";
 import { colors } from "../constants/theme";
 import type { RootStackParamList } from "../navigation/types";
-import { Complaint, formatDateTime, pickObject, statusColor } from "../utils/data";
+import { Complaint, formatDateTime, pickObject, statusColor, mapComplaint } from "../utils/data";
 import { storage } from "../utils/storage";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ComplaintDetails">;
@@ -27,7 +27,8 @@ export default function ComplaintDetailsScreen({ route, navigation }: Props) {
       if (!id) return;
       try {
         const response = await fetchComplaintDetails(Number(id));
-        setComplaint(previous => ({ ...previous, ...pickObject<Complaint>(response.data) }));
+        const picked = pickObject<Record<string, unknown>>(response.data);
+        setComplaint(previous => ({ ...previous, ...mapComplaint(picked) }));
       } catch {
         // Keep route data if detail endpoint is unavailable.
       }
