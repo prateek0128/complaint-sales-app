@@ -5,6 +5,7 @@ import { resolveComplaint } from "../api/api";
 import { AppButton, Field, Screen } from "../components/ui";
 import { colors } from "../constants/theme";
 import type { RootStackParamList } from "../navigation/types";
+import { complaintResolvedNotifications } from "../utils/notifications";
 
 type Props = NativeStackScreenProps<RootStackParamList, "TechnicianOtp">;
 
@@ -16,6 +17,7 @@ export default function TechnicianOtpScreen({ route, navigation }: Props) {
     setLoading(true);
     try {
       await resolveComplaint(Number(route.params.technicianId), Number(route.params.complaintId), Number(otp));
+      await complaintResolvedNotifications(route.params.complaintId, route.params.subscribeToken);
       Alert.alert("Resolved", "Complaint resolved successfully.");
       navigation.replace("Dashboard");
     } catch {

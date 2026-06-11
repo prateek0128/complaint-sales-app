@@ -25,7 +25,7 @@ function DashboardTabs() {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarStyle: { backgroundColor: "#050505", borderTopColor: colors.border },
-        tabBarActiveTintColor: colors.red,
+        tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.muted,
         tabBarIcon: ({ color, size }) => (
           <Ionicons name={route.name === "Home" ? "home" : "person"} color={color} size={size} />

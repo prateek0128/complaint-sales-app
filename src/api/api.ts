@@ -120,3 +120,11 @@ export async function generateInvoice(complaintId: number, repairParts: unknown[
 export async function submitFeedback(starRating: number, feedbackMsg: string, technicianId: number, complaintId: number) {
   return api.post(URLS.complaintFeedback, { starRating, feedbackMsg, technicianId, complaintId });
 }
+
+export async function sendTopicNotification(subscribeToken: string, title: string, body: string) {
+  return api.post(URLS.sendNotification, { subscribeToken, title, body });
+}
+
+export async function subscribeNotificationTopic(token: string, topic: string) {
+  return api.post(URLS.subscribeNotificationTopic, { token, topic });
+}

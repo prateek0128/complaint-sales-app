@@ -6,6 +6,7 @@ import { fetchItemCategories, raiseComplaint, UploadImage } from "../api/api";
 import { AppButton, Field, Screen } from "../components/ui";
 import { colors, radius, spacing, typography } from "../constants/theme";
 import type { RootStackParamList } from "../navigation/types";
+import { newComplaintRaisedNotification } from "../utils/notifications";
 import { storage } from "../utils/storage";
 
 type Props = NativeStackScreenProps<RootStackParamList, "RaiseComplaint">;
@@ -70,6 +71,7 @@ export default function RaiseComplaintScreen({ navigation }: Props) {
         itemImage,
         billImage
       });
+      await newComplaintRaisedNotification(customerName || (await storage.getInfoName()));
       Alert.alert("Submitted", "Complaint submitted successfully.");
       navigation.replace("Dashboard");
     } catch {
@@ -94,7 +96,7 @@ export default function RaiseComplaintScreen({ navigation }: Props) {
         </View>
 
         <View style={styles.section}>
-          <Field label="Complaint Description" value={description} onChangeText={setDescription} placeholder="Enter complaint description" multiline style={[styles.textArea, { minHeight: 100 }]} />
+          <Field label="Complaint Description" value={description} onChangeText={setDescription} placeholder="Enter complaint description" multiline style={[styles.textArea, { minHeight: 100, color: "white" }]} />
           
           <Field label="Item Type" value={item} onChangeText={setItem} placeholder="Select or enter item type" />
           {items.length ? (

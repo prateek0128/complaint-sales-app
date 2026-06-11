@@ -33,5 +33,11 @@ export const storage = {
   setInfoAddress: (value: string) => write("getInfoAddressed", value),
   getInfoProfile: () => read<string>("getInfoProfile", ""),
   setInfoProfile: (value: string) => write("getInfoProfile", value),
+  getSubscribeToken: () => read<string>("subscribeToken", ""),
+  setSubscribeToken: (value: string) => write("subscribeToken", value),
+  getAdminToken: () => read<string>("adminToken", ""),
+  setAdminToken: (value: string) => write("adminToken", value),
+  getWelcomeNotificationShown: () => read<boolean>("welcomeNotificationShown", false),
+  setWelcomeNotificationShown: (value: boolean) => write("welcomeNotificationShown", value),
   clearAll: () => AsyncStorage.clear()
 };

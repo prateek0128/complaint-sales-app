@@ -6,6 +6,7 @@ import { registerCustomer, UploadImage } from "../api/api";
 import { AppButton, Field, Screen } from "../components/ui";
 import { colors } from "../constants/theme";
 import type { RootStackParamList } from "../navigation/types";
+import { customerAddedNotification } from "../utils/notifications";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Registration">;
 
@@ -36,6 +37,7 @@ export default function RegistrationScreen({ navigation }: Props) {
     setLoading(true);
     try {
       await registerCustomer({ firstName, lastName, email, gender, contact, location, profileImage });
+      await customerAddedNotification(`${firstName.trim()} ${lastName.trim()}`.trim());
       Alert.alert("Registered", "Customer registration completed.");
       navigation.replace("LoginUserId");
     } catch {

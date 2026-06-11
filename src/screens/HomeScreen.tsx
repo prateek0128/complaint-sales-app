@@ -3,15 +3,19 @@ import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, Image, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { fetchCustomerComplaints, fetchTechnicianComplaints, getInfo } from "../api/api";
 import { Avatar, Card, Screen } from "../components/ui";
 import { colors, radius, shadows, spacing, typography } from "../constants/theme";
 import type { DashboardTabParamList, RootStackParamList } from "../navigation/types";
 import { Complaint, formatDateTime, pickList, pickObject, statusColor } from "../utils/data";
+import { addSubscribeTopic, showWelcomeNotificationOnce } from "../utils/notifications";
 import { storage } from "../utils/storage";
 
 type Props = CompositeScreenProps<BottomTabScreenProps<DashboardTabParamList, "Home">, NativeStackScreenProps<RootStackParamList>>;
+type ComplaintFilter = "all" | "active" | "pending" | "resolved" | "cancelled";
+
+const normalizeStatus = (status?: string) => String(status ?? "").trim().toLowerCase();
 
 export default function HomeScreen({ navigation }: Props) {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
@@ -19,7 +23,7 @@ export default function HomeScreen({ navigation }: Props) {
   const [accountType, setAccountType] = useState(0);
   const [name, setName] = useState("");
   const [profile, setProfile] = useState("");
-  const [tab, setTab] = useState<"open" | "resolved">("open");
+  const [tab, setTab] = useState<ComplaintFilter>("all");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -34,6 +38,9 @@ export default function HomeScreen({ navigation }: Props) {
       const displayName = `${details.First_Name ?? ""} ${details.Last_Name ?? ""}`.trim();
       setName(displayName || (await storage.getInfoName()));
       setProfile(String(details.Profile_Picture ?? ""))
+      await storage.setSubscribeToken(String(details.SubscribeToken ?? ""));
+      await storage.setAdminToken(String(details.AdminToken ?? ""));
+      await addSubscribeTopic();
       const response = type === 0 ? await fetchCustomerComplaints(userId) : await fetchTechnicianComplaints(userId);
       setComplaints(pickList(response.data));
     } catch {
@@ -46,16 +53,36 @@ export default function HomeScreen({ navigation }: Props) {
   }, []);
 
   useEffect(() => {
+    void showWelcomeNotificationOnce();
     void load();
   }, [load]);
 
   const visible = useMemo(() => {
-    if (accountType !== 0) return complaints.filter(item => item.status !== "Completed");
-    return complaints.filter(item => (tab === "resolved" ? item.status === "Completed" : item.status !== "Completed"));
+    if (accountType !== 0) return complaints.filter(item => normalizeStatus(item.status) !== "completed");
+
+    return complaints.filter(item => {
+      const status = normalizeStatus(item.status);
+      if (tab === "all") return true;
+      if (tab === "resolved") return status === "completed" || status === "resolved";
+      if (tab === "pending") return status === "pending";
+      if (tab === "cancelled") return status === "cancelled" || status === "canceled";
+      return status === "inprogress" || status === "in progress" || status === "active";
+    });
   }, [accountType, complaints, tab]);
 
-  const openCount = complaints.filter(item => item.status !== "Completed").length;
-  const resolvedCount = complaints.filter(item => item.status === "Completed").length;
+  const activeCount = complaints.filter(item => {
+    const status = normalizeStatus(item.status);
+    return status === "inprogress" || status === "in progress" || status === "active";
+  }).length;
+  const pendingCount = complaints.filter(item => normalizeStatus(item.status) === "pending").length;
+  const resolvedCount = complaints.filter(item => {
+    const status = normalizeStatus(item.status);
+    return status === "completed" || status === "resolved";
+  }).length;
+  const cancelledCount = complaints.filter(item => {
+    const status = normalizeStatus(item.status);
+    return status === "cancelled" || status === "canceled";
+  }).length;
 
   return (
     <Screen>
@@ -68,19 +95,27 @@ export default function HomeScreen({ navigation }: Props) {
       </View>
       
       <View style={styles.stats}>
-        <Stat title="Open Issues" count={openCount} icon="warning" color={colors.warning} />
+        <Stat count={activeCount} title="Active" icon="construct" color={colors.warning} />
         {accountType === 0 ? <Stat title="Resolved" count={resolvedCount} icon="checkmark-circle" color={colors.success} /> : null}
       </View>
 
-      <View style={styles.tabs}>
-        <Pressable style={[styles.tab, tab === "open" && styles.tabActive]} onPress={() => setTab("open")}>
-          <Text style={[styles.tabText, tab === "open" && styles.tabTextActive]}>Active</Text>
-        </Pressable>
-        {accountType === 0 ? (
-          <Pressable style={[styles.tab, tab === "resolved" && styles.tabActive]} onPress={() => setTab("resolved")}>
-            <Text style={[styles.tabText, tab === "resolved" && styles.tabTextActive]}>Resolved</Text>
-          </Pressable>
-        ) : null}
+      <View style={styles.tabsShell}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.tabs}
+          style={styles.tabsScroller}
+        >
+          {accountType === 0 ? <FilterTab label="All" value="all" selected={tab} onPress={setTab} /> : null}
+          <FilterTab label="Active" value="active" selected={tab} onPress={setTab} />
+          {accountType === 0 ? (
+            <>
+              <FilterTab label="Pending" value="pending" selected={tab} onPress={setTab} />
+              <FilterTab label="Resolved" value="resolved" selected={tab} onPress={setTab} />
+              <FilterTab label="Cancelled" value="cancelled" selected={tab} onPress={setTab} />
+            </>
+          ) : null}
+        </ScrollView>
       </View>
 
       {loading ? (
@@ -104,14 +139,37 @@ export default function HomeScreen({ navigation }: Props) {
   );
 }
 
+function FilterTab({
+  label,
+  value,
+  selected,
+  onPress
+}: {
+  label: string;
+  value: ComplaintFilter;
+  selected: ComplaintFilter;
+  onPress: (value: ComplaintFilter) => void;
+}) {
+  const isSelected = selected === value;
+  return (
+    <Pressable style={[styles.tab, isSelected && styles.tabActive]} onPress={() => onPress(value)}>
+      <Text style={[styles.tabText, isSelected && styles.tabTextActive]} numberOfLines={1}>
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
 function Stat({ title, count, icon, color }: { title: string; count: number; icon: keyof typeof Ionicons.glyphMap; color: string }) {
   return (
     <View style={[styles.stat, { backgroundColor: color + "1A", borderColor: color + "33" }]}>
       <View style={[styles.iconWrap, { backgroundColor: color }]}>
-        <Ionicons name={icon} color="#fff" size={20} />
+        <Ionicons name={icon} color="#fff" size={18} />
       </View>
-      <Text style={styles.statCount}>{count}</Text>
-      <Text style={styles.statTitle}>{title}</Text>
+      <View style={styles.statText}>
+        <Text style={styles.statTitle}>{title}</Text>
+        <Text style={styles.statCount}>{count}</Text>
+      </View>
     </View>
   );
 }
@@ -172,19 +230,24 @@ const styles = StyleSheet.create({
   },
   stat: {
     flex: 1,
-    minHeight: 110,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    justifyContent: "space-between",
+    minHeight: 72,
+    borderRadius: radius.md,
+    padding: spacing.sm,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
     borderWidth: 1,
   },
   iconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: spacing.xs,
+  },
+  statText: {
+    flex: 1,
+    gap: 2,
   },
   statTitle: {
     ...typography.caption,
@@ -192,29 +255,44 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   statCount: {
-    ...typography.heading2,
+    fontSize: 22,
+    fontWeight: "800",
     color: colors.text,
   },
-  tabs: {
-    flexDirection: "row",
-    gap: spacing.sm,
+  tabsShell: {
     marginBottom: spacing.md,
     backgroundColor: colors.panel,
     borderRadius: radius.md,
-    padding: spacing.xs,
+    minHeight: 52,
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  tabsScroller: {
+    flexGrow: 0,
+  },
+  tabs: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
   },
   tab: {
-    flex: 1,
+    minWidth: 80,
+    minHeight: 42,
     paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.sm,
     borderRadius: radius.sm,
     alignItems: "center",
+    justifyContent: "center",
   },
   tabActive: {
     backgroundColor: colors.panelAlt,
     ...shadows.sm,
   },
   tabText: {
-    ...typography.button,
+    fontSize: 13,
+    fontWeight: "600",
     color: colors.muted,
   },
   tabTextActive: {

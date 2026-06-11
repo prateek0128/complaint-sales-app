@@ -43,11 +43,16 @@ export default function ComplaintDetailsScreen({ route, navigation }: Props) {
     void (async () => {
       try {
         const techRes = await fetchAssignedTechDetails(Number(id));
-        const tech = techRes.data?.TechnicicanDetails?.[0];
+        const tech = pickObject<Record<string, unknown>>(techRes.data);
         if (tech) {
-          setTechnicianID(tech.Technician_ID);
-          setTechnicianName(`${tech.First_Name ?? ""} ${tech.Last_Name ?? ""}`.trim());
-          setTechnicianContact(tech.Contact ?? null);
+          const techId = tech.Id ?? tech.ID ?? tech.Technician_ID ?? tech.technicianId ?? tech.id;
+          const firstName = tech.First_Name ?? tech.firstName ?? "";
+          const lastName = tech.Last_Name ?? tech.lastName ?? "";
+          const contact = tech.Contact ?? tech.contact ?? tech.phoneNumber;
+
+          setTechnicianID(techId == null ? null : Number(techId));
+          setTechnicianName(`${firstName} ${lastName}`.trim() || null);
+          setTechnicianContact(contact == null ? null : String(contact));
         }
       } catch {
         // Leave name/contact as null if endpoint is unavailable.

@@ -8,7 +8,12 @@ type Props = NativeStackScreenProps<RootStackParamList, "Welcome">;
 
 export default function WelcomeScreen({ navigation }: Props) {
   return (
-    <ImageBackground source={require("../../assets/frameBg.png")} resizeMode="cover" style={styles.root}>
+    <ImageBackground
+      source={require("../../assets/frameBg.png")}
+      resizeMode="cover"
+      style={styles.root}
+      imageStyle={styles.backgroundImage}
+    >
       <View style={styles.overlay} />
       <View style={styles.content}>
         <View style={styles.header}>
@@ -45,11 +50,15 @@ export default function WelcomeScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    justifyContent: "flex-end"
+    justifyContent: "flex-end",
+    backgroundColor: colors.background,
+  },
+  backgroundImage: {
+    opacity: 1,
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(18, 18, 26, 0.75)" // darker overlay matching new theme
+    backgroundColor: "rgba(18, 18, 26, 0.28)"
   },
   content: {
     padding: spacing.xl,

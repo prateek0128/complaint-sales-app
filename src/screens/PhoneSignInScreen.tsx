@@ -105,6 +105,8 @@ export default function PhoneSignInScreen({ navigation }: Props) {
         await storage.setInfoNumber(String(details.Contact ?? savedPhone));
         await storage.setInfoAddress(String(details.Location ?? ""));
         await storage.setInfoProfile(String(details.Profile_Picture ?? ""));
+        await storage.setSubscribeToken(String(details.SubscribeToken ?? ""));
+        await storage.setAdminToken(String(details.AdminToken ?? ""));
       }
 
       navigation.replace("Dashboard");

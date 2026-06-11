@@ -50,6 +50,8 @@ export default function LoginUserIdScreen({ navigation }: Props) {
         await storage.setInfoNumber(String(details.Contact ?? phoneNumber));
         await storage.setInfoAddress(String(details.Location ?? ""));
         await storage.setInfoProfile(String(details.Profile_Picture ?? ""));
+        await storage.setSubscribeToken(String(details.SubscribeToken ?? ""));
+        await storage.setAdminToken(String(details.AdminToken ?? ""));
       }
       navigation.replace("Dashboard");
 

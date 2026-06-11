@@ -119,6 +119,7 @@ export const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   input: {
+    ...typography.body1,
     minHeight: 52,
     borderWidth: 1,
     borderColor: colors.border,
@@ -126,7 +127,6 @@ export const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     color: colors.text,
     backgroundColor: colors.panelAlt,
-    ...typography.body1,
   },
   buttonBase: {
     minHeight: 52,
@@ -155,7 +155,8 @@ export const styles = StyleSheet.create({
     backgroundColor: colors.error,
   },
   buttonText: {
-    ...typography.button,
+    fontSize: typography.button.fontSize,
+    fontWeight: typography.button.fontWeight,
   },
   pressed: {
     opacity: 0.8,

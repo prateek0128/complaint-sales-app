@@ -16,5 +16,7 @@ export const URLS = {
   assignTechDetails: "complaint/assigned-tech-Details?",
   invoiceGenerate: "invoice/generate-invoice",
   complaintFeedback: "complaint/createfeedback",
-  newRegistration: "customer/newCustomer"
+  newRegistration: "customer/newCustomer",
+  sendNotification: "notification/send",
+  subscribeNotificationTopic: "notification/subscribe"
 };
