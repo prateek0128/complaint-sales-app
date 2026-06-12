@@ -1,4 +1,5 @@
 import * as Notifications from "expo-notifications";
+import { Platform } from "react-native";
 import { sendTopicNotification, subscribeNotificationTopic } from "../api/api";
 import { storage } from "./storage";
 
@@ -14,7 +15,17 @@ Notifications.setNotificationHandler({
 });
 
 export async function initializeNotifications() {
-  await Notifications.requestPermissionsAsync();
+  if (Platform.OS === "android") {
+    await Notifications.setNotificationChannelAsync("default", {
+      name: "Default",
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: "#6366F1",
+    });
+  }
+
+  const permission = await Notifications.requestPermissionsAsync();
+  console.log("Notification permission:", permission.status);
   Notifications.addNotificationReceivedListener(notification => {
     console.log("Foreground notification received:", notification.request.content.title);
   });
@@ -29,8 +40,10 @@ export async function addSubscribeTopic() {
 
   try {
     const token = (await Notifications.getDevicePushTokenAsync()).data;
+    console.log("Native FCM token:", token);
     if (token) {
       await subscribeNotificationTopic(token, topic);
+      console.log("Subscribed native token to topic:", topic);
     }
   } catch (error) {
     console.log("Unable to subscribe native push token to topic in this runtime:", error);
