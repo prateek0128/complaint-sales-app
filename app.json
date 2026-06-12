@@ -28,6 +28,15 @@
     "web": {
       "favicon": "./assets/frame5.png"
     },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Allow Maheshwari Complaints to use the camera to attach item pictures.",
+          "photosPermission": "Allow Maheshwari Complaints to choose bill receipt images."
+        }
+      ]
+    ],
     "extra": {
       "eas": {
         "projectId": "98b8c9b1-d192-4cef-97ed-ea2ec0fb6601"

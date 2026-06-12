@@ -10,6 +10,7 @@ export type RootStackParamList = {
   Dashboard: undefined;
   RaiseComplaint: undefined;
   ComplaintDetails: { complaintId?: number | string; complaint?: Complaint };
+  InvoiceWebView: { url: string; complaintId: number | string; technicianId: number | string; subscribeToken?: string };
   TechnicianOtp: { complaintId: number | string; technicianId: number | string; subscribeToken?: string };
   Feedback: { complaintId?: number | string; technicianId?: number | string };
 };

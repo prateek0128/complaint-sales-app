@@ -41,12 +41,43 @@ export default function RaiseComplaintScreen({ navigation }: Props) {
     })();
   }, []);
 
+  const setAttachment = (target: "item" | "bill", uri: string) => {
+    const image = asUpload(uri, `${target}.jpg`);
+    if (target === "item") setItemImage(image);
+    else setBillImage(image);
+  };
+
+  const takePicture = async (target: "item" | "bill") => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert("Camera Permission", "Please allow camera access to click pictures.");
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.75,
+    });
+    if (result.canceled) return;
+    setAttachment(target, result.assets[0].uri);
+  };
+
   const pickImage = async (target: "item" | "bill") => {
     const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.75 });
     if (result.canceled) return;
-    const image = asUpload(result.assets[0].uri, `${target}.jpg`);
-    if (target === "item") setItemImage(image);
-    else setBillImage(image);
+    setAttachment(target, result.assets[0].uri);
+  };
+
+  const chooseImageSource = (target: "item" | "bill") => {
+    Alert.alert(
+      target === "item" ? "Attach Item Image" : "Attach Bill Receipt",
+      "Choose image source",
+      [
+        { text: "Camera", onPress: () => void takePicture(target) },
+        { text: "Gallery", onPress: () => void pickImage(target) },
+        { text: "Cancel", style: "cancel" },
+      ],
+    );
   };
 
   const submit = async () => {
@@ -112,7 +143,7 @@ export default function RaiseComplaintScreen({ navigation }: Props) {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Attachments</Text>
-          <ImagePickerButton title="Attach Item Image" image={itemImage} onPress={() => pickImage("item")} />
+          <ImagePickerButton title="Attach Item Image" image={itemImage} onPress={() => chooseImageSource("item")} />
           
           <Pressable style={styles.warranty} onPress={() => setWarranty(value => !value)}>
             <Text style={styles.warrantyText}>Product in Warranty?</Text>
@@ -121,7 +152,7 @@ export default function RaiseComplaintScreen({ navigation }: Props) {
             </View>
           </Pressable>
           
-          {warranty ? <ImagePickerButton title="Attach Bill Receipt" image={billImage} onPress={() => pickImage("bill")} /> : null}
+          {warranty ? <ImagePickerButton title="Attach Bill Receipt" image={billImage} onPress={() => chooseImageSource("bill")} /> : null}
         </View>
 
         <AppButton title="Submit Complaint" loading={loading} onPress={submit} style={styles.submitBtn} />
