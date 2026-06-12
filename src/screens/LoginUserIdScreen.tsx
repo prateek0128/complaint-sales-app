@@ -12,6 +12,7 @@ type Props = NativeStackScreenProps<RootStackParamList, "LoginUserId">;
 export default function LoginUserIdScreen({ navigation }: Props) {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const submit = async () => {
@@ -53,7 +54,10 @@ export default function LoginUserIdScreen({ navigation }: Props) {
         await storage.setSubscribeToken(String(details.SubscribeToken ?? ""));
         await storage.setAdminToken(String(details.AdminToken ?? ""));
       }
-      navigation.replace("Dashboard");
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Dashboard" }],
+      });
 
     } catch (err) {
       const serverMessage =
@@ -87,7 +91,9 @@ export default function LoginUserIdScreen({ navigation }: Props) {
               value={password} 
               onChangeText={setPassword} 
               placeholder="Enter password" 
-              secureTextEntry 
+              secureTextEntry={!passwordVisible}
+              rightIcon={passwordVisible ? "eye-off-outline" : "eye-outline"}
+              onRightIconPress={() => setPasswordVisible(value => !value)}
             />
             <AppButton 
               title="Sign In" 

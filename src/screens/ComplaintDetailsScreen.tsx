@@ -1,15 +1,22 @@
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { Ionicons } from "@expo/vector-icons";
 import * as Linking from "expo-linking";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { deleteComplaint, fetchComplaintDetails, fetchAssignedTechDetails, generateInvoice } from "../api/api";
 import { AppButton, Panel, Screen } from "../components/ui";
 import { colors } from "../constants/theme";
+// import { PUBLIC_INVOICE_CREATE_URL } from "../constants/urls";
 import type { RootStackParamList } from "../navigation/types";
 import { Complaint, formatDateTime, pickObject, statusColor, mapComplaint } from "../utils/data";
 import { storage } from "../utils/storage";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ComplaintDetails">;
+
+// const publicInvoiceUrl = (invoiceUrl: string) => {
+//   const queryIndex = invoiceUrl.indexOf("?");
+//   return `${PUBLIC_INVOICE_CREATE_URL}${queryIndex >= 0 ? invoiceUrl.slice(queryIndex) : ""}`;
+// };
 
 export default function ComplaintDetailsScreen({ route, navigation }: Props) {
   const [complaint, setComplaint] = useState<Complaint | null>(route.params?.complaint ?? null);
@@ -63,30 +70,63 @@ export default function ComplaintDetailsScreen({ route, navigation }: Props) {
   const complaintId = complaint?.complaintId ?? route.params?.complaintId ?? "NA";
   const created = formatDateTime(complaint?.createdAt);
   const products = useMemo(() => complaint?.productsAssigned ?? [], [complaint?.productsAssigned]);
+  const status = String(complaint?.status ?? "").trim().toLowerCase();
+  const canCustomerCancel = accountType === 0 && status === "pending";
 
   const cancel = () => {
-    Alert.alert("Delete Complaint", "Are you sure you want to cancel this complaint?", [
-      { text: "Cancel", style: "cancel" },
+    if (!canCustomerCancel) {
+      Alert.alert("Cannot Cancel", "Only pending complaints can be cancelled.");
+      return;
+    }
+
+    Alert.alert("Cancel Complaint", "Are you sure you want to cancel this complaint?", [
+      { text: "No", style: "cancel" },
       {
-        text: "Delete",
+        text: "Yes, Cancel",
         style: "destructive",
         onPress: async () => {
-          await deleteComplaint(Number(complaintId));
-          navigation.replace("Dashboard");
+          try {
+            await deleteComplaint(Number(complaintId));
+            setComplaint(previous => previous ? { ...previous, status: "Cancelled" } : previous);
+            Alert.alert("Cancelled", "Complaint cancelled successfully.", [
+              { text: "OK", onPress: () => navigation.replace("Dashboard") }
+            ]);
+          } catch (err) {
+            const serverMessage =
+              (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+            Alert.alert("Error", serverMessage ?? "Unable to cancel complaint.");
+          }
         }
       }
     ]);
   };
 
   const createInvoice = async () => {
-    const repairParts = Object.entries(selectedParts).map(([repairPart, quantityAssigned]) => ({ repairPart, quantityAssigned }));
+    const repairParts = Object.entries(selectedParts).map(([part, quantity]) => ({ part, quantity }));
     if (!repairParts.length) {
       Alert.alert("Alert", "Please select products used to resolve this complaint.");
       return;
     }
-    await generateInvoice(Number(complaintId), repairParts);
-    Alert.alert("Done", "Bill generated successfully.");
-    navigation.replace("Dashboard");
+    try {
+      const response = await generateInvoice(complaintId, repairParts);
+      console.log(response.data);
+      
+      const invoiceUrl = String(response.data?.InvoiceUrl ?? response.data?.invoiceUrl ?? "");
+      if (!invoiceUrl) {
+        Alert.alert("Failed", "Something went wrong please try after some time.");
+        return;
+      }
+
+      const fallbackTechnicianId = await storage.getUserId();
+      navigation.navigate("InvoiceWebView", {
+        url: invoiceUrl,
+        complaintId,
+        technicianId: complaint?.technicianId ?? fallbackTechnicianId,
+        subscribeToken: complaint?.subscribeToken
+      });
+    } catch {
+      Alert.alert("Error", "Something went wrong. Please try again.");
+    }
   };
 
   return (
@@ -97,7 +137,7 @@ export default function ComplaintDetailsScreen({ route, navigation }: Props) {
             <Text style={styles.back}>Back</Text>
           </Pressable>
           <Text style={styles.title}>COMPLAINT</Text>
-          {accountType === 0 ? <Pressable onPress={cancel}><Text style={styles.delete}>Delete</Text></Pressable> : <View style={{ width: 48 }} />}
+          {canCustomerCancel ? <Pressable onPress={cancel}><Text style={styles.delete}>Delete</Text></Pressable> : <View style={{ width: 48 }} />}
         </View>
 
         <Panel>
@@ -181,7 +221,9 @@ function TechnicianSection({
         <Text style={styles.sectionTitle}>Assigned Products</Text>
         {products.length ? products.map(product => {
           const name = product.repairPart ?? "Product";
-          const current = selectedParts[name] ?? product.quantityAssigned ?? 0;
+          const maxAllowed = Number(product.quantityAssigned ?? 0);
+          const isSelected = selectedParts[name] != null;
+          const current = selectedParts[name] ?? maxAllowed;
           return (
             <View key={name} style={styles.partRow}>
               <View style={{ flex: 1 }}>
@@ -190,10 +232,32 @@ function TechnicianSection({
               </View>
               <TextInput
                 value={String(current)}
-                onChangeText={text => setSelectedParts({ ...selectedParts, [name]: Number(text) || 0 })}
+                onChangeText={text => {
+                  const nextValue = Number(text) || 0;
+                  if (nextValue > maxAllowed) {
+                    Alert.alert("Alert", "You cannot assign more quantity than the current assigned quantity.");
+                    setSelectedParts({ ...selectedParts, [name]: maxAllowed });
+                    return;
+                  }
+                  setSelectedParts({ ...selectedParts, [name]: nextValue });
+                }}
                 keyboardType="number-pad"
                 style={styles.qty}
               />
+              <Pressable
+                style={[styles.checkBox, isSelected && styles.checkBoxSelected]}
+                onPress={() => {
+                  const next = { ...selectedParts };
+                  if (isSelected) {
+                    delete next[name];
+                  } else {
+                    next[name] = current;
+                  }
+                  setSelectedParts(next);
+                }}
+              >
+                <Ionicons name={isSelected ? "checkmark" : "add"} color="#fff" size={18} />
+              </Pressable>
             </View>
           );
         }) : <Text style={styles.muted}>No assigned products.</Text>}
@@ -228,5 +292,7 @@ const styles = StyleSheet.create({
   partName: { color: colors.text, fontWeight: "800" },
   partDesc: { color: colors.muted, fontSize: 12 },
   qty: { width: 64, height: 42, borderColor: colors.border, borderWidth: 1, color: colors.text, borderRadius: 8, textAlign: "center" },
+  checkBox: { width: 36, height: 36, borderRadius: 8, alignItems: "center", justifyContent: "center", backgroundColor: colors.panelAlt, borderWidth: 1, borderColor: colors.border },
+  checkBoxSelected: { backgroundColor: colors.success, borderColor: colors.success },
   muted: { color: colors.muted, textAlign: "center", paddingVertical: 12 }
 });

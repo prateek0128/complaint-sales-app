@@ -5,6 +5,7 @@ import { colors } from "../constants/theme";
 import ComplaintDetailsScreen from "../screens/ComplaintDetailsScreen";
 import FeedbackScreen from "../screens/FeedbackScreen";
 import HomeScreen from "../screens/HomeScreen";
+import InvoiceWebViewScreen from "../screens/InvoiceWebViewScreen";
 import LoginPhoneScreen from "../screens/LoginPhoneScreen";
 import PhoneSignInScreen from "../screens/PhoneSignInScreen";
 import LoginUserIdScreen from "../screens/LoginUserIdScreen";
@@ -50,6 +51,7 @@ export default function RootNavigator() {
       <Stack.Screen name="Dashboard" component={DashboardTabs} />
       <Stack.Screen name="RaiseComplaint" component={RaiseComplaintScreen} />
       <Stack.Screen name="ComplaintDetails" component={ComplaintDetailsScreen} />
+      <Stack.Screen name="InvoiceWebView" component={InvoiceWebViewScreen} />
       <Stack.Screen name="TechnicianOtp" component={TechnicianOtpScreen} />
       <Stack.Screen name="Feedback" component={FeedbackScreen} />
     </Stack.Navigator>

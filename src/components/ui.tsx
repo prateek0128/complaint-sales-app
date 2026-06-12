@@ -49,16 +49,32 @@ export function AppButton({
   );
 }
 
-export function Field({ label, ...props }: TextInputProps & { label: string }) {
+export function Field({
+  label,
+  rightIcon,
+  onRightIconPress,
+  ...props
+}: TextInputProps & {
+  label: string;
+  rightIcon?: keyof typeof Ionicons.glyphMap;
+  onRightIconPress?: () => void;
+}) {
   return (
     <View style={styles.fieldWrap}>
       <Text style={styles.label}>{label}</Text>
-      <TextInput
-        placeholderTextColor={colors.textSecondary}
-        style={styles.input}
-        autoCapitalize="none"
-        {...props}
-      />
+      <View style={styles.inputWrap}>
+        <TextInput
+          placeholderTextColor={colors.textSecondary}
+          style={[styles.input, rightIcon && styles.inputWithIcon]}
+          autoCapitalize="none"
+          {...props}
+        />
+        {rightIcon ? (
+          <Pressable style={styles.inputIconButton} onPress={onRightIconPress} hitSlop={10}>
+            <Ionicons name={rightIcon} color={colors.textSecondary} size={22} />
+          </Pressable>
+        ) : null}
+      </View>
     </View>
   );
 }
@@ -118,6 +134,9 @@ export const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
+  inputWrap: {
+    position: "relative",
+  },
   input: {
     ...typography.body1,
     minHeight: 52,
@@ -127,6 +146,18 @@ export const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     color: colors.text,
     backgroundColor: colors.panelAlt,
+  },
+  inputWithIcon: {
+    paddingRight: 48,
+  },
+  inputIconButton: {
+    position: "absolute",
+    right: spacing.sm,
+    top: 0,
+    bottom: 0,
+    width: 40,
+    alignItems: "center",
+    justifyContent: "center",
   },
   buttonBase: {
     minHeight: 52,

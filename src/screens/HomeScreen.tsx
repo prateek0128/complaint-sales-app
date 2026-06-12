@@ -1,4 +1,4 @@
-import type { CompositeScreenProps } from "@react-navigation/native";
+import { useFocusEffect, type CompositeScreenProps } from "@react-navigation/native";
 import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
@@ -54,12 +54,15 @@ export default function HomeScreen({ navigation }: Props) {
 
   useEffect(() => {
     void showWelcomeNotificationOnce();
-    void load();
-  }, [load]);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      void load();
+    }, [load])
+  );
 
   const visible = useMemo(() => {
-    if (accountType !== 0) return complaints.filter(item => normalizeStatus(item.status) !== "completed");
-
     return complaints.filter(item => {
       const status = normalizeStatus(item.status);
       if (tab === "all") return true;
@@ -68,7 +71,7 @@ export default function HomeScreen({ navigation }: Props) {
       if (tab === "cancelled") return status === "cancelled" || status === "canceled";
       return status === "inprogress" || status === "in progress" || status === "active";
     });
-  }, [accountType, complaints, tab]);
+  }, [complaints, tab]);
 
   const activeCount = complaints.filter(item => {
     const status = normalizeStatus(item.status);
@@ -96,7 +99,7 @@ export default function HomeScreen({ navigation }: Props) {
       
       <View style={styles.stats}>
         <Stat count={activeCount} title="Active" icon="construct" color={colors.warning} />
-        {accountType === 0 ? <Stat title="Resolved" count={resolvedCount} icon="checkmark-circle" color={colors.success} /> : null}
+        <Stat title="Resolved" count={resolvedCount} icon="checkmark-circle" color={colors.success} />
       </View>
 
       <View style={styles.tabsShell}>
@@ -106,15 +109,11 @@ export default function HomeScreen({ navigation }: Props) {
           contentContainerStyle={styles.tabs}
           style={styles.tabsScroller}
         >
-          {accountType === 0 ? <FilterTab label="All" value="all" selected={tab} onPress={setTab} /> : null}
+          <FilterTab label="All" value="all" selected={tab} onPress={setTab} />
           <FilterTab label="Active" value="active" selected={tab} onPress={setTab} />
-          {accountType === 0 ? (
-            <>
-              <FilterTab label="Pending" value="pending" selected={tab} onPress={setTab} />
-              <FilterTab label="Resolved" value="resolved" selected={tab} onPress={setTab} />
-              <FilterTab label="Cancelled" value="cancelled" selected={tab} onPress={setTab} />
-            </>
-          ) : null}
+          <FilterTab label="Pending" value="pending" selected={tab} onPress={setTab} />
+          <FilterTab label="Resolved" value="resolved" selected={tab} onPress={setTab} />
+          <FilterTab label="Cancelled" value="cancelled" selected={tab} onPress={setTab} />
         </ScrollView>
       </View>
 
@@ -177,25 +176,47 @@ function Stat({ title, count, icon, color }: { title: string; count: number; ico
 function ComplaintCard({ item, onPress }: { item: Complaint; onPress: () => void }) {
   const { date, time } = formatDateTime(item.createdAt ?? item.updatedAt);
   const type = item.item ?? item.itemType ?? "Item";
+  const imageUri = item.itemImage ?? item.billImage;
   return (
-    <Card onPress={onPress}>
-      <View style={styles.cardRow}>
-        <View style={{ flex: 1, gap: spacing.xs }}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>#{item.complaintId ?? "NA"}</Text>
-            <View style={[styles.statusBadge, { backgroundColor: statusColor(item.status) + "22" }]}>
-              <Text style={[styles.status, { color: statusColor(item.status) }]}>{item.status ?? "NA"}</Text>
+    <Card onPress={onPress} style={styles.complaintCard}>
+      <View style={styles.complaintCardContent}>
+        <View style={styles.complaintMain}>
+          <Text style={styles.complaintTitle} numberOfLines={1}>
+            Complaint ID: {item.complaintId ?? "NA"}
+          </Text>
+          <Text style={styles.complaintDesc} numberOfLines={2}>
+            <Text style={styles.complaintDescLabel}>Description: </Text>
+            {item.description ?? item.location ?? "No description provided."}
+          </Text>
+          <Text style={[styles.complaintStatus, { color: statusColor(item.status) }]} numberOfLines={1}>
+            Status: {item.status ?? "NA"}
+          </Text>
+          <View style={styles.complaintMetaRow}>
+            <View style={styles.complaintMetaItem}>
+              <Ionicons name="calendar-outline" size={18} color={colors.textSecondary} />
+              <Text style={styles.complaintMetaText} numberOfLines={1}>
+                {date}
+              </Text>
+            </View>
+            <View style={styles.complaintMetaItem}>
+              <Ionicons name="time-outline" size={18} color={colors.textSecondary} />
+              <Text style={styles.complaintMetaText} numberOfLines={1}>
+                {time || "NA"}
+              </Text>
             </View>
           </View>
-          <Text style={styles.desc} numberOfLines={2}>{item.description ?? item.location ?? "No description provided."}</Text>
-          <View style={styles.cardFooter}>
-            <Ionicons name="time-outline" size={14} color={colors.muted} />
-            <Text style={styles.date}>{date} {time}</Text>
-          </View>
         </View>
-        <View style={styles.cardSide}>
-          {item.itemImage ? <Image source={{ uri: item.itemImage }} style={styles.thumb} /> : <View style={styles.thumbPlaceholder}><Ionicons name="image-outline" size={24} color={colors.muted} /></View>}
-          <Text style={styles.itemType} numberOfLines={1}>{String(type).toUpperCase()}</Text>
+        <View style={styles.complaintMedia}>
+          <Text style={styles.complaintItemLabel} numberOfLines={1}>
+            {String(type).toUpperCase()}
+          </Text>
+          {imageUri ? (
+            <Image source={{ uri: imageUri }} style={styles.complaintThumb} />
+          ) : (
+            <View style={styles.complaintThumbPlaceholder}>
+              <Ionicons name="image-outline" size={28} color={colors.textSecondary} />
+            </View>
+          )}
         </View>
       </View>
     </Card>
@@ -304,66 +325,83 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: spacing.xxl,
   },
-  cardRow: {
+  complaintCard: {
+    backgroundColor: colors.black,
+    borderColor: "rgba(255,255,255,0.05)",
+    borderRadius: 20,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.md,
+    minHeight: 150,
+  },
+  complaintCardContent: {
     flexDirection: "row",
+    alignItems: "stretch",
     gap: spacing.md,
   },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: spacing.xs,
+  complaintMain: {
+    flex: 1,
+    minWidth: 0,
+    gap: spacing.sm,
   },
-  cardTitle: {
-    ...typography.heading3,
-    fontSize: 18,
-    color: colors.text,
-  },
-  statusBadge: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs / 2,
-    borderRadius: radius.pill,
-  },
-  status: {
-    ...typography.caption,
-    fontWeight: "700",
-    textTransform: "uppercase",
-  },
-  desc: {
-    ...typography.body2,
-    color: colors.textSecondary,
-    lineHeight: 20,
-    marginBottom: spacing.xs,
-  },
-  cardFooter: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    marginTop: "auto",
-  },
-  date: {
-    ...typography.caption,
-    color: colors.muted,
-  },
-  cardSide: {
-    width: 80,
-    alignItems: "flex-end",
-    gap: spacing.xs,
-  },
-  itemType: {
-    ...typography.caption,
-    color: colors.primaryLight,
+  complaintTitle: {
+    color: colors.white,
+    fontSize: 20,
     fontWeight: "800",
   },
-  thumb: {
-    width: 80,
-    height: 80,
-    borderRadius: radius.md,
+  complaintDesc: {
+    color: colors.textSecondary,
+    fontSize: 16,
+    lineHeight: 23,
+    fontWeight: "600",
   },
-  thumbPlaceholder: {
-    width: 80,
-    height: 80,
-    borderRadius: radius.md,
+  complaintDescLabel: {
+    color: colors.textSecondary,
+    fontWeight: "800",
+  },
+  complaintStatus: {
+    fontSize: 17,
+    fontWeight: "900",
+  },
+  complaintMetaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    columnGap: spacing.lg,
+    rowGap: spacing.xs,
+    marginTop: spacing.xs,
+  },
+  complaintMetaItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+  },
+  complaintMetaText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  complaintMedia: {
+    width: 96,
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+  },
+  complaintItemLabel: {
+    color: colors.error,
+    fontSize: 17,
+    fontWeight: "900",
+    textAlign: "right",
+  },
+  complaintThumb: {
+    width: 86,
+    height: 78,
+    borderRadius: radius.sm,
+    backgroundColor: colors.panelAlt,
+  },
+  complaintThumbPlaceholder: {
+    width: 86,
+    height: 78,
+    borderRadius: radius.sm,
     backgroundColor: colors.panelAlt,
     alignItems: "center",
     justifyContent: "center",

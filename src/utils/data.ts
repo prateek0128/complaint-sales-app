@@ -7,6 +7,7 @@ export type Complaint = {
   technicianId?: number | string;
   technicianName?: string;
   technicianContact?: string;
+  subscribeToken?: string;
   description?: string;
   status?: string;
   item?: string;
@@ -36,6 +37,7 @@ export function mapComplaint(raw: Record<string, unknown>): Complaint {
   const complaint: any = {
     complaintId:   raw.Complaint_Id   ?? raw.complaintId,
     customerId:    raw.Customer_Id    ?? raw.customerId,
+    technicianId:  raw.Technician_Id  ?? raw.technicianId,
     customerName:  raw.Customer_Name  ?? raw.customerName  ?? String(raw.Customer_Name ?? ""),
     description:   raw.Description    ?? raw.description,
     status:        raw.Status         ?? raw.status,
@@ -47,6 +49,7 @@ export function mapComplaint(raw: Record<string, unknown>): Complaint {
     location:      raw.Location       ?? raw.location,
     contact:       raw.Contact        ?? raw.contact,
     email:         raw.Email          ?? raw.email,
+    subscribeToken: raw.SubscribeToken ?? raw.subscribeToken,
     otp:           raw.Otp            ?? raw.otp,
     createdAt:     raw.CreatedAt      ?? raw.createdAt      ?? raw.Created_At,
     updatedAt:     raw.UpdatedAt      ?? raw.updatedAt,

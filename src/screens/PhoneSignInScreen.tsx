@@ -109,7 +109,10 @@ export default function PhoneSignInScreen({ navigation }: Props) {
         await storage.setAdminToken(String(details.AdminToken ?? ""));
       }
 
-      navigation.replace("Dashboard");
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Dashboard" }],
+      });
     } catch (err) {
       const serverMessage =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message;

@@ -113,7 +113,9 @@ export async function resolveComplaint(technicianId: number, complaintId: number
   return api.post(URLS.resolveComplaint, { technicianId, complaintId, otp });
 }
 
-export async function generateInvoice(complaintId: number, repairParts: unknown[]) {
+export type InvoiceRepairPart = { part: string; quantity: number };
+
+export async function generateInvoice(complaintId: number | string, repairParts: InvoiceRepairPart[]) {
   return api.post(URLS.invoiceGenerate, { ComplaintId: complaintId, repairParts });
 }
 
