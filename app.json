@@ -16,10 +16,11 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "org.maheshwariinfotech.quickcomplaint"
+      "bundleIdentifier": "org.miiscollp.electroniccomplain"
     },
     "android": {
-      "package": "org.maheshwariinfotech.quickcomplaint",
+      "package": "org.miiscollp.electroniccomplain",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/frame5.png",
         "backgroundColor": "#111111"
@@ -29,6 +30,7 @@
       "favicon": "./assets/frame5.png"
     },
     "plugins": [
+      "expo-notifications",
       [
         "expo-image-picker",
         {
