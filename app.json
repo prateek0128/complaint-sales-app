@@ -20,7 +20,10 @@
       "buildNumber": "1",
       "icon": "./assets/frame5.png",
       "bundleIdentifier": "org.miiscollp.electroniccomplain",
-      "googleServicesFile": "./GoogleService-Info.plist"
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "org.miiscollp.electroniccomplain",
