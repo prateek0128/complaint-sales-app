@@ -35,7 +35,11 @@ export default function ComplaintDetailsScreen({ route, navigation }: Props) {
       try {
         const response = await fetchComplaintDetails(Number(id));
         const picked = pickObject<Record<string, unknown>>(response.data);
-        setComplaint(previous => ({ ...previous, ...mapComplaint(picked) }));
+        const mappedComplaint = mapComplaint(picked);
+        setComplaint(previous => ({ ...previous, ...mappedComplaint }));
+        
+        // Log subscribeToken for debugging
+        console.log('Complaint subscribeToken:', mappedComplaint.subscribeToken);
       } catch {
         // Keep route data if detail endpoint is unavailable.
       }
@@ -118,11 +122,15 @@ export default function ComplaintDetailsScreen({ route, navigation }: Props) {
       }
 
       const fallbackTechnicianId = await storage.getUserId();
+      const customerSubscribeToken = complaint?.subscribeToken ?? route.params?.complaint?.subscribeToken;
+      
+      console.log('Passing subscribeToken to InvoiceWebView:', customerSubscribeToken);
+      
       navigation.navigate("InvoiceWebView", {
         url: invoiceUrl,
         complaintId,
         technicianId: complaint?.technicianId ?? fallbackTechnicianId,
-        subscribeToken: complaint?.subscribeToken
+        subscribeToken: customerSubscribeToken
       });
     } catch {
       Alert.alert("Error", "Something went wrong. Please try again.");
