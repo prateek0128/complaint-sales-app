@@ -14,14 +14,31 @@ export default function TechnicianOtpScreen({ route, navigation }: Props) {
   const [loading, setLoading] = useState(false);
 
   const submit = async () => {
+    if (!otp || otp.length < 4) {
+      Alert.alert("Invalid OTP", "Please enter a valid 4-6 digit OTP.");
+      return;
+    }
+    
     setLoading(true);
     try {
+      console.log('Resolving complaint with:');
+      console.log('- Technician ID:', route.params.technicianId);
+      console.log('- Complaint ID:', route.params.complaintId);
+      console.log('- OTP:', otp);
+      console.log('- Customer subscribeToken:', route.params.subscribeToken);
+      
       await resolveComplaint(Number(route.params.technicianId), Number(route.params.complaintId), Number(otp));
+      
+      // Send notification to customer
+      console.log('Sending notification to customer...');
       await complaintResolvedNotifications(route.params.complaintId, route.params.subscribeToken);
-      Alert.alert("Resolved", "Complaint resolved successfully.");
+      
+      Alert.alert("Resolved", "Complaint resolved successfully. Customer has been notified.");
       navigation.replace("Dashboard");
-    } catch {
-      Alert.alert("Error", "Unable to resolve complaint.");
+    } catch (error) {
+      console.error('Error resolving complaint:', error);
+      const errorMessage = (error as any)?.response?.data?.message || "Unable to resolve complaint. Please check the OTP and try again.";
+      Alert.alert("Error", errorMessage);
     } finally {
       setLoading(false);
     }

@@ -1,0 +1,60 @@
+export default {
+  expo: {
+    name: "Maheshwari Complaints",
+    slug: "complaint-sales",
+    version: "1.0.0",
+    orientation: "portrait",
+    icon: "./assets/frame5.png",
+    userInterfaceStyle: "dark",
+    splash: {
+      image: "./assets/frameSplash.png",
+      resizeMode: "contain",
+      backgroundColor: "#111111"
+    },
+    assetBundlePatterns: ["**/*"],
+    ios: {
+      supportsTablet: true,
+      bundleIdentifier: "org.miiscollp.electroniccomplain",
+      googleServicesFile: "./GoogleService-Info.plist"
+    },
+    android: {
+      package: "org.miiscollp.electroniccomplain",
+      googleServicesFile: "./google-services.json",
+      adaptiveIcon: {
+        foregroundImage: "./assets/frame5.png",
+        backgroundColor: "#111111"
+      }
+    },
+    web: {
+      favicon: "./assets/frame5.png"
+    },
+    plugins: [
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging",
+      [
+        "expo-notifications",
+        {
+          icon: "./assets/frame5.png",
+          color: "#6366F1"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          cameraPermission: "Allow Maheshwari Complaints to use the camera to attach item pictures.",
+          photosPermission: "Allow Maheshwari Complaints to choose bill receipt images."
+        }
+      ]
+    ],
+    extra: {
+      eas: {
+        projectId: "98b8c9b1-d192-4cef-97ed-ea2ec0fb6601"
+      }
+    },
+    runtimeVersion: "1.0.0",
+    updates: {
+      url: "https://u.expo.dev/291deea8-3e4e-421b-a405-693a7247ca79"
+    },
+    owner: "  "
+  }
+};

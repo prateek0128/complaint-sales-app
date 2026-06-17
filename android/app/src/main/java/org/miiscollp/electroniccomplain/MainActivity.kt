@@ -1,4 +1,4 @@
-package org.maheshwariinfotech.quickcomplaint
+package org.miiscollp.electroniccomplain
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build
