@@ -14,6 +14,7 @@
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 		F76C49F53CF2DF12D951CC75 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A9A1A22DDF2348EBEC306CFF /* PrivacyInfo.xcprivacy */; };
+		08D1A7FF03724DADB98B3831 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 6C0BDAC0BC7B45918DC86C06 /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +31,7 @@
 		EE38012BDE315D1EB6417C47 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-MaheshwariComplaints/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = MaheshwariComplaints/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* MaheshwariComplaints-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "MaheshwariComplaints-Bridging-Header.h"; path = "MaheshwariComplaints/MaheshwariComplaints-Bridging-Header.h"; sourceTree = "<group>"; };
+		6C0BDAC0BC7B45918DC86C06 /* GoogleService-Info.plist */ = {isa = PBXFileReference; name = "GoogleService-Info.plist"; path = "MaheshwariComplaints/GoogleService-Info.plist"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = text.plist.xml; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,6 +64,7 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
 				A9A1A22DDF2348EBEC306CFF /* PrivacyInfo.xcprivacy */,
+				6C0BDAC0BC7B45918DC86C06 /* GoogleService-Info.plist */,
 			);
 			name = MaheshwariComplaints;
 			sourceTree = "<group>";
@@ -197,6 +200,7 @@
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
 				F76C49F53CF2DF12D951CC75 /* PrivacyInfo.xcprivacy in Resources */,
+				08D1A7FF03724DADB98B3831 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -371,8 +375,8 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
-				PRODUCT_BUNDLE_IDENTIFIER = org.maheshwariinfotech.quickcomplaint;
-				PRODUCT_NAME = MaheshwariComplaints;
+				PRODUCT_BUNDLE_IDENTIFIER = org.miiscollp.electroniccomplain;
+				PRODUCT_NAME = "MaheshwariComplaints";
 				SWIFT_OBJC_BRIDGING_HEADER = "MaheshwariComplaints/MaheshwariComplaints-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -402,8 +406,8 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
-				PRODUCT_BUNDLE_IDENTIFIER = org.maheshwariinfotech.quickcomplaint;
-				PRODUCT_NAME = MaheshwariComplaints;
+				PRODUCT_BUNDLE_IDENTIFIER = org.miiscollp.electroniccomplain;
+				PRODUCT_NAME = "MaheshwariComplaints";
 				SWIFT_OBJC_BRIDGING_HEADER = "MaheshwariComplaints/MaheshwariComplaints-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";

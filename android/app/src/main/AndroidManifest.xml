@@ -32,6 +32,7 @@
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="exp+complaint-sales"/>
+        <data android:scheme="complaintsales"/>
       </intent-filter>
     </activity>
   </application>

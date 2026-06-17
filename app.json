@@ -2,6 +2,7 @@
   "expo": {
     "name": "Maheshwari Complaints",
     "slug": "complaint-sales",
+    "scheme": "complaintsales",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/frame5.png",
@@ -16,7 +17,10 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "org.miiscollp.electroniccomplain"
+      "buildNumber": "1",
+      "icon": "./assets/frame5.png",
+      "bundleIdentifier": "org.miiscollp.electroniccomplain",
+      "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
       "package": "org.miiscollp.electroniccomplain",
@@ -24,13 +28,26 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/frame5.png",
         "backgroundColor": "#111111"
-      }
+      },
+      "versionCode": 1,
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
     },
     "web": {
+      "bundler": "metro",
+      "output": "static",
       "favicon": "./assets/frame5.png"
     },
     "plugins": [
-      "expo-notifications",
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/frame5.png",
+          "color": "#6366F1"
+        }
+      ],
       [
         "expo-image-picker",
         {
@@ -51,4 +68,3 @@
     "owner": "miiscoorg"
   }
 }
-

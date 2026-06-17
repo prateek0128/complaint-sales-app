@@ -9,7 +9,7 @@ import { Avatar, Card, Screen } from "../components/ui";
 import { colors, radius, shadows, spacing, typography } from "../constants/theme";
 import type { DashboardTabParamList, RootStackParamList } from "../navigation/types";
 import { Complaint, formatDateTime, pickList, pickObject, statusColor } from "../utils/data";
-import { addSubscribeTopic, showWelcomeNotificationOnce } from "../utils/notifications";
+import { addSubscribeTopic, notificationTopicForAccount, showWelcomeNotificationOnce } from "../utils/notifications";
 import { storage } from "../utils/storage";
 
 type Props = CompositeScreenProps<BottomTabScreenProps<DashboardTabParamList, "Home">, NativeStackScreenProps<RootStackParamList>>;
@@ -38,7 +38,8 @@ export default function HomeScreen({ navigation }: Props) {
       const displayName = `${details.First_Name ?? ""} ${details.Last_Name ?? ""}`.trim();
       setName(displayName || (await storage.getInfoName()));
       setProfile(String(details.Profile_Picture ?? ""))
-      await storage.setSubscribeToken(String(details.SubscribeToken ?? ""));
+      const savedSubscribeToken = typeof details.SubscribeToken === "string" ? details.SubscribeToken.trim() : "";
+      await storage.setSubscribeToken(savedSubscribeToken || notificationTopicForAccount(type, userId));
       await storage.setAdminToken(String(details.AdminToken ?? ""));
       await addSubscribeTopic();
       const response = type === 0 ? await fetchCustomerComplaints(userId) : await fetchTechnicianComplaints(userId);

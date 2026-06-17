@@ -8,11 +8,28 @@ const ADMIN_NOTIFICATION_TOPIC = "notification";
 // Configure notification handler for foreground notifications
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
   }),
 });
+
+export function notificationTopicForAccount(accountType: number, userId: number | string) {
+  return accountType === 1 ? `technician_${userId}` : `customer_${userId}`;
+}
+
+async function subscribeWithExpoDeviceToken(topic: string) {
+  const deviceToken = await Notifications.getDevicePushTokenAsync();
+  const nativeToken = deviceToken.data;
+  console.log("Native FCM token:", nativeToken);
+
+  if (!nativeToken || typeof nativeToken !== "string") {
+    throw new Error("Native FCM token is missing.");
+  }
+
+  await subscribeNotificationTopic(nativeToken, topic);
+}
 
 export async function initializeNotifications() {
   // Create notification channels for Android
@@ -79,32 +96,10 @@ export async function addSubscribeTopic() {
   }
 
   try {
-    // Get Expo push token
-    const expoPushToken = await Notifications.getExpoPushTokenAsync();
-    console.log("Expo push token:", expoPushToken.data);
-
-    // Try to get native FCM token if available
-    try {
-      const deviceToken = await Notifications.getDevicePushTokenAsync();
-      const nativeToken = deviceToken.data;
-      console.log("Native FCM token:", nativeToken);
-      
-      if (nativeToken && typeof nativeToken === "string") {
-        await subscribeNotificationTopic(nativeToken, topic);
-        console.log("Subscribed native FCM token to topic:", topic);
-        return;
-      }
-    } catch (nativeError) {
-      console.log("Native FCM token not available, using Expo token:", nativeError);
-    }
-
-    // Fallback to Expo token
-    if (expoPushToken.data) {
-      await subscribeNotificationTopic(expoPushToken.data, topic);
-      console.log("Subscribed Expo token to topic:", topic);
-    }
+    await subscribeWithExpoDeviceToken(topic);
+    console.log("Subscribed native FCM token to topic:", topic);
   } catch (error) {
-    console.error("Error subscribing to topic:", error);
+    console.error("Error getting native FCM token or subscribing to topic:", error);
   }
 }
 

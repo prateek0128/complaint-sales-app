@@ -22,14 +22,16 @@ export default function SplashScreen({ navigation }: Props) {
 
     const run = async () => {
       try {
-        setUpdateStatus("Checking for updates...");
-        const update = await Updates.checkForUpdateAsync();
-        if (update.isAvailable) {
-          setUpdateStatus("Downloading update...");
-          await Updates.fetchUpdateAsync();
-          setUpdateStatus("Update ready! Restarting...");
-          await Updates.reloadAsync();
-          return;
+        if (!__DEV__) {
+          setUpdateStatus("Checking for updates...");
+          const update = await Updates.checkForUpdateAsync();
+          if (update.isAvailable) {
+            setUpdateStatus("Downloading update...");
+            await Updates.fetchUpdateAsync();
+            setUpdateStatus("Update ready! Restarting...");
+            await Updates.reloadAsync();
+            return;
+          }
         }
       } catch (updateError) {
         console.log("Update check failed:", updateError);
