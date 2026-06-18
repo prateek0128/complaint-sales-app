@@ -163,16 +163,10 @@ export async function customerAddedNotification(fullName: string) {
 
 export async function newComplaintRaisedNotification(customerName: string) {
   // Show local notification
-  await showLocalNotification(
+  return showLocalNotification(
     "Complaint Raised Successfully",
     `Your complaint has been submitted and will be reviewed shortly.`,
     { type: "complaint_raised", customer: customerName }
-  );
-  
-  // Send to web admin
-  return sendWebNotification(
-    "New Complaint Raised",
-    `A new complaint has been raised by ${customerName}. Please review and assign it to a technician.`
   );
 }
 
@@ -181,40 +175,9 @@ export async function complaintResolvedNotifications(complaintId: string | numbe
   console.log('- Complaint ID:', complaintId);
   console.log('- Customer Topic:', customerTopic);
   
-  // Show local notification to customer
-  await showLocalNotification(
+  return showLocalNotification(
     "Complaint Resolved",
-    `Your complaint [ID: ${complaintId}] has been successfully resolved!`,
+    `Complaint [ID: ${complaintId}] has been marked as resolved.`,
     { type: "complaint_resolved", complaintId: complaintId.toString() }
   );
-  
-  // Send push notification to customer if topic is valid
-  if (customerTopic && isValidTopic(customerTopic)) {
-    try {
-      console.log('Sending notification to customer topic:', customerTopic);
-      await sendNotification(
-        customerTopic,
-        "Your Complaint Has Been Resolved",
-        `Your complaint [Complaint ID: ${complaintId}] has been resolved by our technician.`
-      );
-      console.log('Customer notification sent successfully');
-    } catch (error) {
-      console.error('Error sending customer notification:', error);
-    }
-  } else {
-    console.warn('Invalid or missing customer topic, skipping customer notification');
-  }
-
-  // Notify web admin
-  try {
-    const technicianName = await storage.getInfoName();
-    console.log('Sending admin notification for technician:', technicianName);
-    await sendWebNotification(
-      "Complaint Resolved",
-      `The complaint [Complaint ID: ${complaintId}] assigned to ${technicianName} has been marked as resolved.`
-    );
-    console.log('Admin notification sent successfully');
-  } catch (error) {
-    console.error('Error sending admin notification:', error);
-  }
 }
