@@ -51,6 +51,7 @@
           "color": "#6366F1"
         }
       ],
+      "./plugins/withFirebaseNotificationColorOverride",
       [
         "expo-image-picker",
         {
