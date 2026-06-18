@@ -6,7 +6,6 @@ import { fetchItemCategories, raiseComplaint, UploadImage } from "../api/api";
 import { AppButton, Field, Screen } from "../components/ui";
 import { colors, radius, spacing, typography } from "../constants/theme";
 import type { RootStackParamList } from "../navigation/types";
-import { newComplaintRaisedNotification } from "../utils/notifications";
 import { storage } from "../utils/storage";
 
 type Props = NativeStackScreenProps<RootStackParamList, "RaiseComplaint">;
@@ -102,7 +101,6 @@ export default function RaiseComplaintScreen({ navigation }: Props) {
         itemImage,
         billImage
       });
-      await newComplaintRaisedNotification(customerName || (await storage.getInfoName()));
       Alert.alert("Submitted", "Complaint submitted successfully.");
       navigation.replace("Dashboard");
     } catch {

@@ -1,4 +1,5 @@
 import * as Notifications from "expo-notifications";
+import messaging from "@react-native-firebase/messaging";
 import { Platform } from "react-native";
 import { sendTopicNotification, subscribeNotificationTopic } from "../api/api";
 import { storage } from "./storage";
@@ -20,13 +21,15 @@ export function notificationTopicForAccount(accountType: number, userId: number 
 }
 
 async function subscribeWithExpoDeviceToken(topic: string) {
-  const deviceToken = await Notifications.getDevicePushTokenAsync();
-  const nativeToken = deviceToken.data;
+  const nativeToken = await messaging().getToken();
   console.log("Native FCM token:", nativeToken);
 
   if (!nativeToken || typeof nativeToken !== "string") {
     throw new Error("Native FCM token is missing.");
   }
+
+  await messaging().subscribeToTopic(topic);
+  console.log("Subscribed with Firebase Messaging to topic:", topic);
 
   await subscribeNotificationTopic(nativeToken, topic);
 }
@@ -67,7 +70,18 @@ export async function initializeNotifications() {
     return;
   }
 
+  await messaging().requestPermission();
   console.log("Notification permission:", finalStatus);
+
+  messaging().onMessage(async remoteMessage => {
+    const title = remoteMessage.notification?.title ?? "Notification";
+    const body = remoteMessage.notification?.body ?? "";
+    console.log("Foreground FCM notification received:", title, body);
+
+    if (body) {
+      await showLocalNotification(title, body, remoteMessage.data);
+    }
+  });
 
   // Listen for foreground notifications
   Notifications.addNotificationReceivedListener(notification => {
@@ -89,15 +103,22 @@ export async function initializeNotifications() {
 }
 
 export async function addSubscribeTopic() {
-  const topic = await storage.getSubscribeToken();
-  if (!isValidTopic(topic)) {
+  const savedTopic = await storage.getSubscribeToken();
+  const userId = await storage.getUserId();
+  const accountType = await storage.getAccountType();
+  const canonicalTopic = userId ? notificationTopicForAccount(accountType, userId) : "";
+  const topics = Array.from(new Set([savedTopic, canonicalTopic].filter(isValidTopic)));
+
+  if (topics.length === 0) {
     console.log("Invalid topic, skipping subscription");
     return;
   }
 
   try {
-    await subscribeWithExpoDeviceToken(topic);
-    console.log("Subscribed native FCM token to topic:", topic);
+    for (const topic of topics) {
+      await subscribeWithExpoDeviceToken(topic);
+      console.log("Subscribed native FCM token to topic:", topic);
+    }
   } catch (error) {
     console.error("Error getting native FCM token or subscribing to topic:", error);
   }

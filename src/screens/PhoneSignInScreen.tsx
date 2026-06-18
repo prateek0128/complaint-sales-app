@@ -6,6 +6,7 @@ import { WebView } from "react-native-webview";
 import { loginWithPhone, getInfo } from "../api/api";
 import { colors } from "../constants/theme";
 import type { RootStackParamList } from "../navigation/types";
+import { addSubscribeTopic } from "../utils/notifications";
 import { storage } from "../utils/storage";
 
 const CLIENT_ID = "13482807120004084554";
@@ -108,6 +109,7 @@ export default function PhoneSignInScreen({ navigation }: Props) {
         await storage.setSubscribeToken(String(details.SubscribeToken ?? ""));
         await storage.setAdminToken(String(details.AdminToken ?? ""));
       }
+      await addSubscribeTopic();
 
       navigation.reset({
         index: 0,

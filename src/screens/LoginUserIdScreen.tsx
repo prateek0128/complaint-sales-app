@@ -5,6 +5,7 @@ import { AppButton, Field, Screen } from "../components/ui";
 import { loginWithUserId, getInfo } from "../api/api";
 import { colors, spacing, typography } from "../constants/theme";
 import type { RootStackParamList } from "../navigation/types";
+import { addSubscribeTopic } from "../utils/notifications";
 import { storage } from "../utils/storage";
 
 type Props = NativeStackScreenProps<RootStackParamList, "LoginUserId">;
@@ -54,6 +55,7 @@ export default function LoginUserIdScreen({ navigation }: Props) {
         await storage.setSubscribeToken(String(details.SubscribeToken ?? ""));
         await storage.setAdminToken(String(details.AdminToken ?? ""));
       }
+      await addSubscribeTopic();
       navigation.reset({
         index: 0,
         routes: [{ name: "Dashboard" }],

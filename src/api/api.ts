@@ -97,7 +97,8 @@ export async function raiseComplaint(data: {
       item: data.item,
       contact: data.contact,
       address: data.address,
-      warranty: data.warranty
+      warranty: data.warranty,
+      createdFrom: "customer_app"
     })
   );
   form.append("itemImage", data.itemImage as unknown as Blob);
