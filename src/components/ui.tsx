@@ -11,6 +11,7 @@ export function AppButton({
   title,
   onPress,
   loading,
+  disabled,
   icon,
   variant = "primary",
   style,
@@ -18,6 +19,7 @@ export function AppButton({
   title: string;
   onPress: () => void;
   loading?: boolean;
+  disabled?: boolean;
   icon?: keyof typeof Ionicons.glyphMap;
   variant?: "primary" | "secondary" | "outline" | "danger";
   style?: any;
@@ -39,9 +41,9 @@ export function AppButton({
 
   return (
     <Pressable 
-      style={({ pressed }) => [styles.buttonBase, getButtonStyle(), pressed && styles.pressed, style]} 
+      style={({ pressed }) => [styles.buttonBase, getButtonStyle(), (loading || disabled) && styles.buttonDisabled, pressed && !(loading || disabled) && styles.pressed, style]} 
       onPress={onPress} 
-      disabled={loading}
+      disabled={loading || disabled}
     >
       {loading ? <ActivityIndicator color={getTextColor()} /> : icon ? <Ionicons name={icon} color={getTextColor()} size={20} /> : null}
       <Text style={[styles.buttonText, { color: getTextColor() }]}>{title}</Text>
@@ -184,6 +186,9 @@ export const styles = StyleSheet.create({
   },
   buttonDanger: {
     backgroundColor: colors.error,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
   },
   buttonText: {
     fontSize: typography.button.fontSize,

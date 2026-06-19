@@ -12,10 +12,11 @@ type Props = NativeStackScreenProps<RootStackParamList, "TechnicianOtp">;
 export default function TechnicianOtpScreen({ route, navigation }: Props) {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
+  const isOtpValid = otp.trim().length === 4;
 
   const submit = async () => {
-    if (!otp || otp.length < 4) {
-      Alert.alert("Invalid OTP", "Please enter a valid 4-6 digit OTP.");
+    if (!isOtpValid) {
+      Alert.alert("Invalid OTP", "Please enter a valid 4 digit OTP.");
       return;
     }
     
@@ -47,8 +48,8 @@ export default function TechnicianOtpScreen({ route, navigation }: Props) {
   return (
     <Screen>
       <Text style={styles.title}>Technician OTP</Text>
-      <Field label="OTP" value={otp} onChangeText={setOtp} keyboardType="number-pad" maxLength={6} placeholder="Enter OTP" />
-      <AppButton title="Resolve Complaint" loading={loading} onPress={submit} />
+      <Field label="OTP" value={otp} onChangeText={setOtp} keyboardType="number-pad" maxLength={4} placeholder="Enter OTP" />
+      <AppButton title="Resolve Complaint" loading={loading} onPress={submit} disabled={!isOtpValid} />
     </Screen>
   );
 }

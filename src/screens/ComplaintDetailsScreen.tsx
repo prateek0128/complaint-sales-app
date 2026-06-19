@@ -153,7 +153,7 @@ export default function ComplaintDetailsScreen({ route, navigation }: Props) {
           <Info label="Status" value={complaint?.status ?? "NA"} color={statusColor(complaint?.status)} />
           <Info label="Description" value={complaint?.description ?? "NA"} />
           <Info label="Item" value={complaint?.item ?? complaint?.itemType ?? "NA"} />
-          <Info label="Raised" value={`${created.date} ${created.time}`} />
+          <Info label="Raised at" value={`${created.date} ${created.time}`} />
         </Panel>
 
         {complaint?.itemImage ? <Image source={{ uri: complaint.itemImage }} style={styles.heroImage} /> : null}
@@ -218,6 +218,8 @@ function TechnicianSection({
   setSelectedParts: (value: Record<string, number>) => void;
   createInvoice: () => void;
 }) {
+  const hasSelectedParts = Object.keys(selectedParts).length > 0;
+
   return (
     <View style={{ gap: 14 }}>
       <Panel>
@@ -232,28 +234,53 @@ function TechnicianSection({
           const maxAllowed = Number(product.quantityAssigned ?? 0);
           const isSelected = selectedParts[name] != null;
           const current = selectedParts[name] ?? maxAllowed;
+          const setPartQuantity = (nextValue: number) => {
+            const boundedValue = Math.max(0, Math.min(nextValue, maxAllowed));
+            setSelectedParts({ ...selectedParts, [name]: boundedValue });
+          };
           return (
             <View key={name} style={styles.partRow}>
               <View style={{ flex: 1 }}>
                 <Text style={styles.partName}>{name}</Text>
                 <Text style={styles.partDesc}>{product.description ?? ""}</Text>
               </View>
-              <TextInput
-                value={String(current)}
-                onChangeText={text => {
-                  const nextValue = Number(text) || 0;
-                  if (nextValue > maxAllowed) {
-                    Alert.alert("Alert", "You cannot assign more quantity than the current assigned quantity.");
-                    setSelectedParts({ ...selectedParts, [name]: maxAllowed });
-                    return;
-                  }
-                  setSelectedParts({ ...selectedParts, [name]: nextValue });
-                }}
-                keyboardType="number-pad"
-                style={styles.qty}
-              />
+              <View style={styles.qtyStepper}>
+                <Pressable
+                  style={[styles.qtyButton, current <= 0 && styles.qtyButtonDisabled]}
+                  disabled={current <= 0}
+                  onPress={() => setPartQuantity(current - 1)}
+                  hitSlop={8}
+                >
+                  <Ionicons name="remove" color={current <= 0 ? colors.muted : colors.text} size={18} />
+                </Pressable>
+                <TextInput
+                  value={String(current)}
+                  onChangeText={text => {
+                    const nextValue = Number(text) || 0;
+                    if (nextValue > maxAllowed) {
+                      Alert.alert("Alert", "You cannot assign more quantity than the current assigned quantity.");
+                      setPartQuantity(maxAllowed);
+                      return;
+                    }
+                    setPartQuantity(nextValue);
+                  }}
+                  keyboardType="number-pad"
+                  style={styles.qty}
+                />
+                <Pressable
+                  style={[styles.qtyButton, current >= maxAllowed && styles.qtyButtonDisabled]}
+                  disabled={current >= maxAllowed}
+                  onPress={() => setPartQuantity(current + 1)}
+                  hitSlop={8}
+                >
+                  <Ionicons name="add" color={current >= maxAllowed ? colors.muted : colors.text} size={18} />
+                </Pressable>
+              </View>
               <Pressable
                 style={[styles.checkBox, isSelected && styles.checkBoxSelected]}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: isSelected }}
+                hitSlop={10}
                 onPress={() => {
                   const next = { ...selectedParts };
                   if (isSelected) {
@@ -264,13 +291,13 @@ function TechnicianSection({
                   setSelectedParts(next);
                 }}
               >
-                <Ionicons name={isSelected ? "checkmark" : "add"} color="#fff" size={18} />
+                {isSelected ? <Ionicons name="checkmark" color={colors.white} size={18} /> : null}
               </Pressable>
             </View>
           );
         }) : <Text style={styles.muted}>No assigned products.</Text>}
       </Panel>
-      {complaint?.status !== "Completed" ? <AppButton title="Generate Bill" icon="receipt-outline" onPress={createInvoice} /> : null}
+      {complaint?.status !== "Completed" ? <AppButton title="Generate Bill" icon="receipt-outline" onPress={createInvoice} disabled={!hasSelectedParts} /> : null}
     </View>
   );
 }
@@ -299,8 +326,11 @@ const styles = StyleSheet.create({
   partRow: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 10, borderBottomColor: colors.border, borderBottomWidth: 1 },
   partName: { color: colors.text, fontWeight: "800" },
   partDesc: { color: colors.muted, fontSize: 12 },
-  qty: { width: 64, height: 42, borderColor: colors.border, borderWidth: 1, color: colors.text, borderRadius: 8, textAlign: "center" },
-  checkBox: { width: 36, height: 36, borderRadius: 8, alignItems: "center", justifyContent: "center", backgroundColor: colors.panelAlt, borderWidth: 1, borderColor: colors.border },
+  qtyStepper: { flexDirection: "row", alignItems: "center", borderColor: colors.border, borderWidth: 1, borderRadius: 8, overflow: "hidden" },
+  qtyButton: { width: 34, height: 42, alignItems: "center", justifyContent: "center", backgroundColor: colors.panelAlt },
+  qtyButtonDisabled: { opacity: 0.45 },
+  qty: { width: 48, height: 42, color: colors.text, textAlign: "center", borderLeftColor: colors.border, borderLeftWidth: 1, borderRightColor: colors.border, borderRightWidth: 1 },
+  checkBox: { width: 26, height: 26, borderRadius: 4, alignItems: "center", justifyContent: "center", backgroundColor: colors.transparent, borderWidth: 2, borderColor: colors.border },
   checkBoxSelected: { backgroundColor: colors.success, borderColor: colors.success },
   muted: { color: colors.muted, textAlign: "center", paddingVertical: 12 }
 });
