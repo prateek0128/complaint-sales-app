@@ -12,6 +12,10 @@
       "resizeMode": "contain",
       "backgroundColor": "#111111"
     },
+    "notification": {
+      "icon": "./assets/frame5.png",
+      "color": "#6366F1"
+    },
     "assetBundlePatterns": [
       "**/*"
     ],
