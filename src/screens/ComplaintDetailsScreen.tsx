@@ -2,10 +2,10 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import * as Linking from "expo-linking";
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { deleteComplaint, fetchComplaintDetails, fetchAssignedTechDetails, generateInvoice } from "../api/api";
-import { AppButton, Panel, Screen } from "../components/ui";
-import { colors } from "../constants/theme";
+import { AppButton, AppHeader, IconButton, Panel, Screen, SectionHeader, useAppAlert } from "../components/ui";
+import { colors, radius, spacing, typography } from "../constants/theme";
 // import { PUBLIC_INVOICE_CREATE_URL } from "../constants/urls";
 import type { RootStackParamList } from "../navigation/types";
 import { Complaint, formatDateTime, pickObject, statusColor, mapComplaint } from "../utils/data";
@@ -19,12 +19,14 @@ type Props = NativeStackScreenProps<RootStackParamList, "ComplaintDetails">;
 // };
 
 export default function ComplaintDetailsScreen({ route, navigation }: Props) {
+  const alert = useAppAlert();
   const [complaint, setComplaint] = useState<Complaint | null>(route.params?.complaint ?? null);
   const [accountType, setAccountType] = useState(0);
   const [selectedParts, setSelectedParts] = useState<Record<string, number>>({});
   const [technicianID, setTechnicianID] = useState<number | null>(null);
   const [technicianName, setTechnicianName] = useState<string | null>(null);
   const [technicianContact, setTechnicianContact] = useState<string | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   // Fetch complaint details
   useEffect(() => {
@@ -79,11 +81,11 @@ export default function ComplaintDetailsScreen({ route, navigation }: Props) {
 
   const cancel = () => {
     if (!canCustomerCancel) {
-      Alert.alert("Cannot Cancel", "Only pending complaints can be cancelled.");
+      alert.show("Cannot Cancel", "Only pending complaints can be cancelled.");
       return;
     }
 
-    Alert.alert("Cancel Complaint", "Are you sure you want to cancel this complaint?", [
+    alert.show("Cancel Complaint", "Are you sure you want to cancel this complaint?", [
       { text: "No", style: "cancel" },
       {
         text: "Yes, Cancel",
@@ -92,13 +94,13 @@ export default function ComplaintDetailsScreen({ route, navigation }: Props) {
           try {
             await deleteComplaint(Number(complaintId));
             setComplaint(previous => previous ? { ...previous, status: "Cancelled" } : previous);
-            Alert.alert("Cancelled", "Complaint cancelled successfully.", [
-              { text: "OK", onPress: () => navigation.replace("Dashboard") }
+            alert.show("Cancelled", "Complaint cancelled successfully.", [
+              { text: "Done", onPress: () => navigation.replace("Dashboard") }
             ]);
           } catch (err) {
             const serverMessage =
               (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-            Alert.alert("Error", serverMessage ?? "Unable to cancel complaint.");
+            alert.show("Error", serverMessage ?? "Unable to cancel complaint.");
           }
         }
       }
@@ -108,7 +110,7 @@ export default function ComplaintDetailsScreen({ route, navigation }: Props) {
   const createInvoice = async () => {
     const repairParts = Object.entries(selectedParts).map(([part, quantity]) => ({ part, quantity }));
     if (!repairParts.length) {
-      Alert.alert("Alert", "Please select products used to resolve this complaint.");
+      alert.show("Alert", "Please select products used to resolve this complaint.");
       return;
     }
     try {
@@ -117,7 +119,7 @@ export default function ComplaintDetailsScreen({ route, navigation }: Props) {
       
       const invoiceUrl = String(response.data?.InvoiceUrl ?? response.data?.invoiceUrl ?? "");
       if (!invoiceUrl) {
-        Alert.alert("Failed", "Something went wrong please try after some time.");
+        alert.show("Failed", "Something went wrong please try after some time.");
         return;
       }
 
@@ -133,30 +135,42 @@ export default function ComplaintDetailsScreen({ route, navigation }: Props) {
         subscribeToken: customerSubscribeToken
       });
     } catch {
-      Alert.alert("Error", "Something went wrong. Please try again.");
+      alert.show("Error", "Something went wrong. Please try again.");
     }
   };
 
   return (
     <Screen>
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.header}>
-          <Pressable onPress={() => navigation.replace("Dashboard")}>
-            <Text style={styles.back}>Back</Text>
-          </Pressable>
-          <Text style={styles.title}>COMPLAINT</Text>
-          {canCustomerCancel ? <Pressable onPress={cancel}><Text style={styles.delete}>Delete</Text></Pressable> : <View style={{ width: 48 }} />}
-        </View>
+        <AppHeader
+          title="Complaint"
+          subtitle={`Ticket #${complaintId}`}
+          left={<IconButton icon="chevron-back" variant="soft" onPress={() => navigation.replace("Dashboard")} />}
+          right={canCustomerCancel ? <IconButton icon="trash-outline" variant="danger" onPress={cancel} /> : undefined}
+        />
 
         <Panel>
+          <SectionHeader title="Summary" right={<StatusBadge status={complaint?.status} />} />
           <Info label="Complaint ID" value={String(complaintId)} bold />
-          <Info label="Status" value={complaint?.status ?? "NA"} color={statusColor(complaint?.status)} />
           <Info label="Description" value={complaint?.description ?? "NA"} />
           <Info label="Item" value={complaint?.item ?? complaint?.itemType ?? "NA"} />
           <Info label="Raised at" value={`${created.date} ${created.time}`} />
         </Panel>
 
-        {complaint?.itemImage ? <Image source={{ uri: complaint.itemImage }} style={styles.heroImage} /> : null}
+        {complaint?.itemImage ? (
+          <Pressable
+            accessibilityRole="imagebutton"
+            accessibilityLabel="Open complaint image"
+            onPress={() => setPreviewImage(complaint.itemImage ?? null)}
+            style={({ pressed }) => [styles.heroImageButton, pressed && styles.pressed]}
+          >
+            <Image source={{ uri: complaint.itemImage }} style={styles.heroImage} />
+            <View style={styles.imageHint}>
+              <Ionicons name="expand-outline" size={16} color={colors.white} />
+              <Text style={styles.imageHintText}>View full image</Text>
+            </View>
+          </Pressable>
+        ) : null}
 
         {accountType === 0 ? (
           <CustomerSection
@@ -170,6 +184,19 @@ export default function ComplaintDetailsScreen({ route, navigation }: Props) {
           <TechnicianSection complaint={complaint} products={products} selectedParts={selectedParts} setSelectedParts={setSelectedParts} createInvoice={createInvoice} />
         )}
       </ScrollView>
+
+      <Modal transparent visible={Boolean(previewImage)} animationType="fade" statusBarTranslucent onRequestClose={() => setPreviewImage(null)}>
+        <View style={styles.previewOverlay}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setPreviewImage(null)} />
+          <View style={styles.previewHeader}>
+            <Text style={styles.previewTitle}>Complaint Image</Text>
+            <Pressable accessibilityRole="button" onPress={() => setPreviewImage(null)} hitSlop={10} style={styles.previewClose}>
+              <Ionicons name="close" size={24} color={colors.white} />
+            </Pressable>
+          </View>
+          {previewImage ? <Image source={{ uri: previewImage }} style={styles.previewImage} resizeMode="contain" /> : null}
+        </View>
+      </Modal>
     </Screen>
   );
 }
@@ -191,7 +218,7 @@ function CustomerSection({
     <View style={{ gap: 14 }}>
       {complaint?.status === "InProgress" ? (
         <Panel>
-          <Text style={styles.sectionTitle}>Technician is allocated.</Text>
+          <SectionHeader title="Technician Allocated" subtitle="Use this OTP when the service is complete." />
           <Info label="Technician ID" value={String(technicianID ?? "NA")} />
           <Info label="Technician Name" value={technicianName ?? "NA"} />
           <Info label="Technician Contact" value={technicianContact ?? "NA"} />
@@ -218,7 +245,10 @@ function TechnicianSection({
   setSelectedParts: (value: Record<string, number>) => void;
   createInvoice: () => void;
 }) {
+  const alert = useAppAlert();
   const hasSelectedParts = Object.keys(selectedParts).length > 0;
+  const status = String(complaint?.status ?? "").trim().toLowerCase();
+  const isResolved = status === "completed" || status === "resolved";
 
   return (
     <View style={{ gap: 14 }}>
@@ -228,7 +258,10 @@ function TechnicianSection({
         <Info label="Address" value={complaint?.address ?? complaint?.location ?? "NA"} />
       </Panel>
       <Panel>
-        <Text style={styles.sectionTitle}>Assigned Products</Text>
+        <SectionHeader
+          title="Assigned Products"
+          subtitle={isResolved ? "Products used for this resolved complaint." : "Select the parts used before generating the bill."}
+        />
         {products.length ? products.map(product => {
           const name = product.repairPart ?? "Product";
           const maxAllowed = Number(product.quantityAssigned ?? 0);
@@ -246,19 +279,19 @@ function TechnicianSection({
               </View>
               <View style={styles.qtyStepper}>
                 <Pressable
-                  style={[styles.qtyButton, current <= 0 && styles.qtyButtonDisabled]}
-                  disabled={current <= 0}
+                  style={[styles.qtyButton, (isResolved || current <= 0) && styles.qtyButtonDisabled]}
+                  disabled={isResolved || current <= 0}
                   onPress={() => setPartQuantity(current - 1)}
                   hitSlop={8}
                 >
-                  <Ionicons name="remove" color={current <= 0 ? colors.muted : colors.text} size={18} />
+                  <Ionicons name="remove" color={isResolved || current <= 0 ? colors.muted : colors.text} size={18} />
                 </Pressable>
                 <TextInput
                   value={String(current)}
                   onChangeText={text => {
                     const nextValue = Number(text) || 0;
                     if (nextValue > maxAllowed) {
-                      Alert.alert("Alert", "You cannot assign more quantity than the current assigned quantity.");
+                      alert.show("Alert", "You cannot assign more quantity than the current assigned quantity.");
                       setPartQuantity(maxAllowed);
                       return;
                     }
@@ -266,20 +299,22 @@ function TechnicianSection({
                   }}
                   keyboardType="number-pad"
                   style={styles.qty}
+                  editable={!isResolved}
                 />
                 <Pressable
-                  style={[styles.qtyButton, current >= maxAllowed && styles.qtyButtonDisabled]}
-                  disabled={current >= maxAllowed}
+                  style={[styles.qtyButton, (isResolved || current >= maxAllowed) && styles.qtyButtonDisabled]}
+                  disabled={isResolved || current >= maxAllowed}
                   onPress={() => setPartQuantity(current + 1)}
                   hitSlop={8}
                 >
-                  <Ionicons name="add" color={current >= maxAllowed ? colors.muted : colors.text} size={18} />
+                  <Ionicons name="add" color={isResolved || current >= maxAllowed ? colors.muted : colors.text} size={18} />
                 </Pressable>
               </View>
               <Pressable
-                style={[styles.checkBox, isSelected && styles.checkBoxSelected]}
+                style={[styles.checkBox, isSelected && styles.checkBoxSelected, isResolved && styles.checkBoxDisabled]}
                 accessibilityRole="checkbox"
                 accessibilityState={{ checked: isSelected }}
+                disabled={isResolved}
                 hitSlop={10}
                 onPress={() => {
                   const next = { ...selectedParts };
@@ -297,7 +332,7 @@ function TechnicianSection({
           );
         }) : <Text style={styles.muted}>No assigned products.</Text>}
       </Panel>
-      {complaint?.status !== "Completed" ? <AppButton title="Generate Bill" icon="receipt-outline" onPress={createInvoice} disabled={!hasSelectedParts} /> : null}
+      {!isResolved ? <AppButton title="Generate Bill" icon="receipt-outline" onPress={createInvoice} disabled={!hasSelectedParts} /> : null}
     </View>
   );
 }
@@ -311,26 +346,42 @@ function Info({ label, value, bold, color, onPress }: { label: string; value: st
   );
 }
 
+function StatusBadge({ status }: { status?: string }) {
+  const color = statusColor(status);
+  return (
+    <View style={[styles.statusBadge, { backgroundColor: color + "22", borderColor: color + "55" }]}>
+      <Text style={[styles.statusBadgeText, { color }]}>{status ?? "NA"}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  content: { gap: 14, paddingBottom: 36 },
-  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingTop: 12 },
-  title: { color: colors.text, fontSize: 22, fontWeight: "900" },
-  back: { color: colors.text, fontWeight: "800" },
-  delete: { color: colors.red, fontWeight: "800" },
-  infoRow: { paddingVertical: 8, gap: 4 },
-  infoLabel: { color: colors.muted, fontSize: 13 },
-  infoValue: { color: colors.text, fontSize: 16, lineHeight: 22 },
+  content: { gap: spacing.md, paddingBottom: 96 },
+  infoRow: { paddingVertical: spacing.sm, gap: 4, borderBottomWidth: 1, borderBottomColor: colors.border },
+  infoLabel: { ...typography.caption, color: colors.muted },
+  infoValue: { ...typography.body1, color: colors.text },
   bold: { fontWeight: "900" },
-  heroImage: { width: "100%", height: 210, borderRadius: 12, backgroundColor: colors.panel },
-  sectionTitle: { color: colors.text, fontSize: 18, fontWeight: "900", marginBottom: 8, textAlign: "center" },
-  partRow: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 10, borderBottomColor: colors.border, borderBottomWidth: 1 },
-  partName: { color: colors.text, fontWeight: "800" },
-  partDesc: { color: colors.muted, fontSize: 12 },
-  qtyStepper: { flexDirection: "row", alignItems: "center", borderColor: colors.border, borderWidth: 1, borderRadius: 8, overflow: "hidden" },
+  heroImageButton: { position: "relative", borderRadius: radius.xl, overflow: "hidden" },
+  heroImage: { width: "100%", height: 220, borderRadius: radius.xl, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.border },
+  imageHint: { position: "absolute", right: spacing.md, bottom: spacing.md, flexDirection: "row", alignItems: "center", gap: spacing.xs, backgroundColor: "rgba(2,6,23,0.72)", borderColor: "rgba(255,255,255,0.16)", borderWidth: 1, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
+  imageHintText: { ...typography.caption, color: colors.white, fontWeight: "800" },
+  previewOverlay: { flex: 1, backgroundColor: "rgba(2,6,23,0.96)", alignItems: "center", justifyContent: "center", padding: spacing.md },
+  previewHeader: { position: "absolute", top: spacing.xl, left: spacing.md, right: spacing.md, zIndex: 2, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  previewTitle: { ...typography.heading3, color: colors.white },
+  previewClose: { width: 44, height: 44, borderRadius: 22, backgroundColor: "rgba(255,255,255,0.12)", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "rgba(255,255,255,0.18)" },
+  previewImage: { width: "100%", height: "82%" },
+  pressed: { opacity: 0.86 },
+  partRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm, paddingVertical: spacing.md, borderBottomColor: colors.border, borderBottomWidth: 1 },
+  partName: { color: colors.text, fontWeight: "900" },
+  partDesc: { color: colors.muted, fontSize: 12, marginTop: 2 },
+  qtyStepper: { flexDirection: "row", alignItems: "center", borderColor: colors.border, borderWidth: 1, borderRadius: radius.md, overflow: "hidden" },
   qtyButton: { width: 34, height: 42, alignItems: "center", justifyContent: "center", backgroundColor: colors.panelAlt },
   qtyButtonDisabled: { opacity: 0.45 },
   qty: { width: 48, height: 42, color: colors.text, textAlign: "center", borderLeftColor: colors.border, borderLeftWidth: 1, borderRightColor: colors.border, borderRightWidth: 1 },
   checkBox: { width: 26, height: 26, borderRadius: 4, alignItems: "center", justifyContent: "center", backgroundColor: colors.transparent, borderWidth: 2, borderColor: colors.border },
   checkBoxSelected: { backgroundColor: colors.success, borderColor: colors.success },
-  muted: { color: colors.muted, textAlign: "center", paddingVertical: 12 }
+  checkBoxDisabled: { opacity: 0.55 },
+  statusBadge: { borderWidth: 1, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
+  statusBadgeText: { ...typography.caption, fontWeight: "900" },
+  muted: { ...typography.body2, color: colors.muted, textAlign: "center", paddingVertical: spacing.md }
 });

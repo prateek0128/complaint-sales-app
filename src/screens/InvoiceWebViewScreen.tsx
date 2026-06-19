@@ -1,7 +1,8 @@
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useRef } from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { WebView, WebViewMessageEvent } from "react-native-webview";
+import { AppHeader, IconButton, Screen, useAppAlert } from "../components/ui";
 import { colors } from "../constants/theme";
 import type { RootStackParamList } from "../navigation/types";
 
@@ -22,17 +23,22 @@ const captureConsoleScript = `
 `;
 
 export default function InvoiceWebViewScreen({ navigation, route }: Props) {
+  const alert = useAppAlert();
   const didNavigate = useRef(false);
 
   const goToOtp = () => {
     if (didNavigate.current) return;
     didNavigate.current = true;
-    Alert.alert("Invoice Sent", "The invoice has been successfully sent to your email");
-    navigation.replace("TechnicianOtp", {
-      complaintId: route.params.complaintId,
-      technicianId: route.params.technicianId,
-      subscribeToken: route.params.subscribeToken
-    });
+    alert.show("Invoice Sent", "The invoice has been successfully sent to your email", [
+      {
+        text: "Continue",
+        onPress: () => navigation.replace("TechnicianOtp", {
+          complaintId: route.params.complaintId,
+          technicianId: route.params.technicianId,
+          subscribeToken: route.params.subscribeToken
+        })
+      }
+    ]);
   };
 
   const handleMessage = (event: WebViewMessageEvent) => {
@@ -42,13 +48,14 @@ export default function InvoiceWebViewScreen({ navigation, route }: Props) {
   };
 
   return (
-    <View style={styles.root}>
-      <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()}>
-          <Text style={styles.back}>Back</Text>
-        </Pressable>
-        <Text style={styles.title}>INVOICE</Text>
-        <View style={{ width: 48 }} />
+    <Screen padded={false} style={styles.root}>
+      <View style={styles.headerShell}>
+        <AppHeader
+          title="Invoice"
+          subtitle="Review and send the generated bill."
+          left={<IconButton icon="chevron-back" variant="soft" onPress={() => navigation.goBack()} />}
+          style={styles.header}
+        />
       </View>
       <WebView
         source={{ uri: route.params.url }}
@@ -57,7 +64,7 @@ export default function InvoiceWebViewScreen({ navigation, route }: Props) {
         injectedJavaScript={captureConsoleScript}
         onMessage={handleMessage}
       />
-    </View>
+    </Screen>
   );
 }
 
@@ -66,24 +73,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background
   },
-  header: {
-    minHeight: 58,
+  headerShell: {
     paddingHorizontal: 16,
-    paddingTop: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: colors.black
+    backgroundColor: colors.background,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
-  back: {
-    color: colors.text,
-    fontWeight: "800",
-    fontSize: 16
-  },
-  title: {
-    color: colors.text,
-    fontSize: 20,
-    fontWeight: "900"
+  header: {
+    paddingBottom: 12,
   },
   webView: {
     flex: 1,

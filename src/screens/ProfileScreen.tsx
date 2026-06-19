@@ -5,7 +5,7 @@ import * as Linking from "expo-linking";
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Avatar, Card, Screen } from "../components/ui";
+import { AppHeader, Avatar, Card, ListItem, Screen } from "../components/ui";
 import { colors, radius, spacing, typography } from "../constants/theme";
 import type { DashboardTabParamList, RootStackParamList } from "../navigation/types";
 import { storage } from "../utils/storage";
@@ -33,6 +33,7 @@ export default function ProfileScreen({ navigation }: Props) {
   return (
     <Screen>
       <ScrollView contentContainerStyle={styles.content}>
+        <AppHeader title="Profile" subtitle="Manage your account and support details." />
         <View style={styles.profile}>
           <Avatar uri={profile} size={100} />
           <View style={styles.profileInfo}>
@@ -47,7 +48,7 @@ export default function ProfileScreen({ navigation }: Props) {
             <Text style={styles.panelTitle}>About App</Text>
           </View>
           <Text style={styles.copy}>Maheshwari Infotech Complaint App</Text>
-          <Text style={styles.muted}>This app helps customers register complaints, track technician visits, and receive service updates.</Text>
+          <Text style={styles.muted}>Register complaints, track technician visits, and receive service updates in one premium workspace.</Text>
           <Text style={styles.version}>Version: 1.0.0</Text>
         </Card>
         
@@ -56,10 +57,7 @@ export default function ProfileScreen({ navigation }: Props) {
             <Ionicons name="help-buoy-outline" size={24} color={colors.primaryLight} />
             <Text style={styles.panelTitle}>Help & Support</Text>
           </View>
-          <Pressable style={styles.contactRow} onPress={() => Linking.openURL("tel:+917409548907")}>
-            <Ionicons name="call" size={20} color={colors.success} />
-            <Text style={styles.link}>Contact Us: +91 7409548907</Text>
-          </Pressable>
+          <ListItem title="Contact Us" subtitle="+91 7409548907" icon="call-outline" onPress={() => Linking.openURL("tel:+917409548907")} />
         </Card>
         
         <Pressable style={({ pressed }) => [styles.logout, pressed && styles.pressed]} onPress={logout}>
@@ -74,13 +72,17 @@ export default function ProfileScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   content: {
     gap: spacing.md,
-    paddingTop: spacing.xl,
     paddingBottom: spacing.xxl,
   },
   profile: {
     alignItems: "center",
     gap: spacing.md,
     marginBottom: spacing.lg,
+    padding: spacing.lg,
+    borderRadius: radius.xl,
+    backgroundColor: colors.panel,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   profileInfo: {
     alignItems: "center",
@@ -119,17 +121,6 @@ const styles = StyleSheet.create({
   version: {
     ...typography.caption,
     color: colors.muted,
-  },
-  contactRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    paddingVertical: spacing.sm,
-  },
-  link: {
-    ...typography.body1,
-    color: colors.success,
-    fontWeight: "700",
   },
   logout: {
     backgroundColor: colors.panel,

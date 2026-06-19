@@ -3,6 +3,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { Platform } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { AppAlertProvider } from "./src/components/ui";
 import RootNavigator from "./src/navigation/RootNavigator";
 import { initializeNotifications } from "./src/utils/notifications";
 
@@ -36,10 +37,12 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
-        <StatusBar style="light" />
-        <RootNavigator />
-      </NavigationContainer>
+      <AppAlertProvider>
+        <NavigationContainer>
+          <StatusBar style="light" />
+          <RootNavigator />
+        </NavigationContainer>
+      </AppAlertProvider>
     </SafeAreaProvider>
   );
 }

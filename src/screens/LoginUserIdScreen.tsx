@@ -1,9 +1,9 @@
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useState } from "react";
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
-import { AppButton, Field, Screen } from "../components/ui";
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from "react-native";
+import { AppButton, AppHeader, Field, Panel, Screen, useAppAlert } from "../components/ui";
 import { loginWithUserId, getInfo } from "../api/api";
-import { colors, spacing, typography } from "../constants/theme";
+import { spacing } from "../constants/theme";
 import type { RootStackParamList } from "../navigation/types";
 import { addSubscribeTopic } from "../utils/notifications";
 import { storage } from "../utils/storage";
@@ -11,6 +11,7 @@ import { storage } from "../utils/storage";
 type Props = NativeStackScreenProps<RootStackParamList, "LoginUserId">;
 
 export default function LoginUserIdScreen({ navigation }: Props) {
+  const alert = useAppAlert();
   const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -18,7 +19,7 @@ export default function LoginUserIdScreen({ navigation }: Props) {
 
   const submit = async () => {
     if (phoneNumber.length < 10 || !password) {
-      Alert.alert("Alert", "Enter registered mobile number and password.");
+      alert.show("Alert", "Enter registered mobile number and password.");
       return;
     }
     setLoading(true);
@@ -28,7 +29,7 @@ export default function LoginUserIdScreen({ navigation }: Props) {
 
       // Mirrors Flutter loginWithUserID check: message === 'Login successful!'
       if (body.message !== "Login successful!") {
-        Alert.alert("Failed", "Your Number is not Registered");
+        alert.show("Failed", "Your Number is not Registered");
         return;
       }
 
@@ -52,6 +53,7 @@ export default function LoginUserIdScreen({ navigation }: Props) {
         await storage.setInfoNumber(String(details.Contact ?? phoneNumber));
         await storage.setInfoAddress(String(details.Location ?? ""));
         await storage.setInfoProfile(String(details.Profile_Picture ?? ""));
+        await storage.setInfoGender(String(details.Gender ?? details.gender ?? ""));
         await storage.setSubscribeToken(String(details.SubscribeToken ?? ""));
         await storage.setAdminToken(String(details.AdminToken ?? ""));
       }
@@ -64,7 +66,7 @@ export default function LoginUserIdScreen({ navigation }: Props) {
     } catch (err) {
       const serverMessage =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      Alert.alert("Error", serverMessage ?? "Something went wrong. Please try again.");
+      alert.show("Error", serverMessage ?? "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -74,12 +76,9 @@ export default function LoginUserIdScreen({ navigation }: Props) {
     <Screen>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.keyboardAvoidingView}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
-          <View style={styles.header}>
-            <Text style={styles.title}>Welcome Back</Text>
-            <Text style={styles.subtitle}>Log in using your registered mobile number and password.</Text>
-          </View>
+          <AppHeader title="Welcome Back" subtitle="Log in using your registered mobile number and password." />
           
-          <View style={styles.form}>
+          <Panel style={styles.form}>
             <Field 
               label="User ID" 
               value={phoneNumber} 
@@ -104,7 +103,7 @@ export default function LoginUserIdScreen({ navigation }: Props) {
               onPress={submit} 
               style={styles.submitBtn} 
             />
-          </View>
+          </Panel>
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>
@@ -120,25 +119,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: spacing.xxl,
   },
-  header: {
-    marginBottom: spacing.xl,
-  },
-  title: {
-    ...typography.heading1,
-    color: colors.primaryLight,
-    marginBottom: spacing.xs,
-  },
-  subtitle: {
-    ...typography.body1,
-    color: colors.textSecondary,
-    lineHeight: 24,
-  },
   form: {
-    backgroundColor: colors.panel,
     padding: spacing.lg,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   submitBtn: {
     marginTop: spacing.md,

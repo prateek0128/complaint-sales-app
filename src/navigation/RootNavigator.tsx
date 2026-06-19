@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { colors } from "../constants/theme";
+import { colors, radius, shadows, spacing } from "../constants/theme";
 import ComplaintDetailsScreen from "../screens/ComplaintDetailsScreen";
 import FeedbackScreen from "../screens/FeedbackScreen";
 import HomeScreen from "../screens/HomeScreen";
@@ -25,11 +25,31 @@ function DashboardTabs() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarStyle: { backgroundColor: "#050505", borderTopColor: colors.border },
-        tabBarActiveTintColor: colors.primary,
+        tabBarStyle: {
+          position: "absolute",
+          left: spacing.md,
+          right: spacing.md,
+          bottom: spacing.sm,
+          minHeight: 68,
+          paddingTop: spacing.sm,
+          paddingBottom: spacing.sm,
+          backgroundColor: colors.panel,
+          borderTopColor: colors.border,
+          borderTopWidth: 1,
+          borderRadius: radius.xl,
+          ...shadows.lg,
+        },
+        tabBarItemStyle: {
+          borderRadius: radius.lg,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: "800",
+        },
+        tabBarActiveTintColor: colors.primaryLight,
         tabBarInactiveTintColor: colors.muted,
         tabBarIcon: ({ color, size }) => (
-          <Ionicons name={route.name === "Home" ? "home" : "person"} color={color} size={size} />
+          <Ionicons name={route.name === "Home" ? "home" : "person-circle"} color={color} size={size + 2} />
         )
       })}
     >

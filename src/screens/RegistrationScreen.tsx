@@ -1,10 +1,10 @@
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
-import { Alert, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { registerCustomer, UploadImage } from "../api/api";
-import { AppButton, Field, Screen } from "../components/ui";
-import { colors } from "../constants/theme";
+import { AppButton, AppHeader, Field, IconButton, Panel, Screen, useAppAlert } from "../components/ui";
+import { colors, radius, spacing, typography } from "../constants/theme";
 import type { RootStackParamList } from "../navigation/types";
 import { customerAddedNotification } from "../utils/notifications";
 
@@ -15,6 +15,7 @@ function toUpload(uri: string, name: string): UploadImage {
 }
 
 export default function RegistrationScreen({ navigation }: Props) {
+  const alert = useAppAlert();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -31,17 +32,18 @@ export default function RegistrationScreen({ navigation }: Props) {
 
   const submit = async () => {
     if (!firstName || !contact || !location) {
-      Alert.alert("Alert", "Name, contact, and location are required.");
+      alert.show("Alert", "Name, contact, and location are required.");
       return;
     }
     setLoading(true);
     try {
       await registerCustomer({ firstName, lastName, email, gender, contact, location, profileImage });
       await customerAddedNotification(`${firstName.trim()} ${lastName.trim()}`.trim());
-      Alert.alert("Registered", "Customer registration completed.");
-      navigation.replace("LoginUserId");
+      alert.show("Registered", "Customer registration completed.", [
+        { text: "Continue", onPress: () => navigation.replace("LoginUserId") }
+      ]);
     } catch {
-      Alert.alert("Registration failed", "Unable to complete registration.");
+      alert.show("Registration failed", "Unable to complete registration.");
     } finally {
       setLoading(false);
     }
@@ -51,18 +53,24 @@ export default function RegistrationScreen({ navigation }: Props) {
     <Screen>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.keyboardAvoidingView}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
-          <Text style={styles.title}>New Registration</Text>
-          <Field label="First Name" value={firstName} onChangeText={setFirstName} placeholder="Enter first name" />
-          <Field label="Last Name" value={lastName} onChangeText={setLastName} placeholder="Enter last name" />
-          <Field label="Email" value={email} onChangeText={setEmail} placeholder="Enter email" keyboardType="email-address" />
-          <Field label="Gender" value={gender} onChangeText={setGender} placeholder="Male / Female" />
-          <Field label="Contact" value={contact} onChangeText={setContact} placeholder="Enter contact" keyboardType="number-pad" maxLength={10} />
-          <Field label="Location" value={location} onChangeText={setLocation} placeholder="Enter address" multiline />
-          <View style={styles.previewRow}>
-            {profileImage ? <Image source={{ uri: profileImage.uri }} style={styles.preview} /> : null}
-            <AppButton title="Choose Profile Image" icon="image-outline" onPress={pickImage} />
-          </View>
-          <AppButton title="Register" loading={loading} onPress={submit} />
+          <AppHeader
+            title="Create Account"
+            subtitle="Register your profile to raise and track service complaints."
+            left={<IconButton icon="chevron-back" variant="soft" onPress={() => navigation.goBack()} />}
+          />
+          <Panel style={styles.form}>
+            <Field label="First Name" value={firstName} onChangeText={setFirstName} placeholder="Enter first name" />
+            <Field label="Last Name" value={lastName} onChangeText={setLastName} placeholder="Enter last name" />
+            <Field label="Email" value={email} onChangeText={setEmail} placeholder="Enter email" keyboardType="email-address" />
+            <Field label="Gender" value={gender} onChangeText={setGender} placeholder="Male / Female" />
+            <Field label="Contact" value={contact} onChangeText={setContact} placeholder="Enter contact" keyboardType="number-pad" maxLength={10} />
+            <Field label="Location" value={location} onChangeText={setLocation} placeholder="Enter address" multiline />
+            <View style={styles.previewRow}>
+              {profileImage ? <Image source={{ uri: profileImage.uri }} style={styles.preview} /> : <View style={styles.previewPlaceholder}><Text style={styles.previewPlaceholderText}>Photo</Text></View>}
+              <AppButton title={profileImage ? "Change Profile Image" : "Choose Profile Image"} icon="image-outline" variant="secondary" onPress={pickImage} style={{ flex: 1 }} />
+            </View>
+            <AppButton title="Register" loading={loading} onPress={submit} />
+          </Panel>
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>
@@ -75,22 +83,36 @@ const styles = StyleSheet.create({
   },
   content: {
     flexGrow: 1,
-    paddingBottom: 36
+    paddingVertical: spacing.lg,
   },
-  title: {
-    color: colors.text,
-    fontSize: 26,
-    fontWeight: "900",
-    marginBottom: 22,
-    marginTop: 20
+  form: {
+    padding: spacing.lg,
   },
   previewRow: {
-    gap: 14,
-    marginBottom: 20
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    marginBottom: spacing.lg,
   },
   preview: {
-    width: 96,
-    height: 96,
-    borderRadius: 48
+    width: 72,
+    height: 72,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  previewPlaceholder: {
+    width: 72,
+    height: 72,
+    borderRadius: radius.lg,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.panelAlt,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  previewPlaceholderText: {
+    ...typography.caption,
+    color: colors.muted,
   }
 });

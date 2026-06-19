@@ -1,7 +1,8 @@
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Screen } from "../components/ui";
-import { colors } from "../constants/theme";
+import { Ionicons } from "@expo/vector-icons";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { AppButton, AppHeader, Panel, Screen } from "../components/ui";
+import { colors, spacing, typography } from "../constants/theme";
 import type { RootStackParamList } from "../navigation/types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "LoginPhone">;
@@ -10,11 +11,18 @@ export default function LoginPhoneScreen({ navigation }: Props) {
   return (
     <Screen>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Login with Phone</Text>
-        <Text style={styles.info}>Tap below to sign in securely using your phone number.</Text>
-        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("PhoneSignIn")}>
-          <Text style={styles.buttonLabel}>Sign In with Phone Number</Text>
-        </TouchableOpacity>
+        <AppHeader
+          centered
+          title="Phone Login"
+          subtitle="Use secure phone verification to access your service dashboard."
+        />
+        <Panel style={styles.panel}>
+          <View style={styles.iconCircle}>
+            <Ionicons name="shield-checkmark-outline" color={colors.primaryLight} size={34} />
+          </View>
+          <Text style={styles.info}>A secure phone sign-in page will open for verification.</Text>
+          <AppButton title="Sign In with Phone" icon="call" onPress={() => navigation.navigate("PhoneSignIn")} />
+        </Panel>
       </ScrollView>
     </Screen>
   );
@@ -25,32 +33,26 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 24
+    paddingVertical: spacing.xxl,
   },
-  title: {
-    color: colors.text,
-    fontSize: 26,
-    fontWeight: "900",
-    marginBottom: 12,
-    textAlign: "center"
+  panel: {
+    width: "100%",
+    alignItems: "center",
+    gap: spacing.md,
   },
   info: {
-    color: colors.muted,
-    fontSize: 14,
+    ...typography.body2,
     textAlign: "center",
-    marginBottom: 32
+    color: colors.textSecondary,
   },
-  button: {
-    backgroundColor: colors.red,
-    borderRadius: 15,
-    paddingVertical: 14,
-    paddingHorizontal: 32,
+  iconCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     alignItems: "center",
-    width: "100%"
+    justifyContent: "center",
+    backgroundColor: "rgba(99,102,241,0.16)",
+    borderWidth: 1,
+    borderColor: "rgba(165,180,252,0.26)",
   },
-  buttonLabel: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "700"
-  }
 });

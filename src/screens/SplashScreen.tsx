@@ -2,8 +2,8 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import * as Splash from "expo-splash-screen";
 import * as Updates from "expo-updates";
 import { useEffect, useState } from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
-import { colors } from "../constants/theme";
+import { ActivityIndicator, Image, StyleSheet, Text, View } from "react-native";
+import { colors, radius, shadows, spacing, typography } from "../constants/theme";
 import { storage } from "../utils/storage";
 import type { RootStackParamList } from "../navigation/types";
 
@@ -51,10 +51,15 @@ export default function SplashScreen({ navigation }: Props) {
 
   return (
     <View style={styles.root}>
-      <Image source={require("../../assets/frameSplash.png")} style={styles.logo} resizeMode="contain" />
+      <View style={styles.logoShell}>
+        <Image source={require("../../assets/frameSplash.png")} style={styles.logo} resizeMode="contain" />
+      </View>
       <Text style={styles.title}>Maheshwari Infotech</Text>
       <Text style={styles.subtitle}>Complaint Service</Text>
-      {updateStatus ? <Text style={styles.status}>{updateStatus}</Text> : null}
+      <View style={styles.statusRow}>
+        <ActivityIndicator color={colors.primaryLight} size="small" />
+        <Text style={styles.status}>{updateStatus ?? "Preparing your workspace..."}</Text>
+      </View>
     </View>
   );
 }
@@ -65,29 +70,47 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: colors.background,
-    padding: 24
+    padding: spacing.lg
+  },
+  logoShell: {
+    width: 190,
+    height: 190,
+    borderRadius: radius.xl,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.panel,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.lg,
   },
   logo: {
-    width: 190,
-    height: 190
+    width: 150,
+    height: 150
   },
   title: {
-    color: colors.text,
-    fontSize: 26,
-    fontWeight: "900",
-    marginTop: 16,
+    ...typography.heading1,
+    marginTop: spacing.lg,
     textAlign: "center"
   },
   subtitle: {
-    color: colors.muted,
-    marginTop: 8,
-    fontSize: 16
+    ...typography.body1,
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
+  },
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    marginTop: spacing.xl,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.pill,
+    backgroundColor: colors.panelAlt,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   status: {
+    ...typography.caption,
     color: colors.primaryLight,
-    marginTop: 24,
-    fontSize: 14,
-    fontWeight: "700",
-    textAlign: "center"
   }
 });

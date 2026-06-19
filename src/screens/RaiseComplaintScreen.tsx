@@ -1,9 +1,9 @@
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import * as ImagePicker from "expo-image-picker";
 import { useEffect, useState } from "react";
-import { Alert, Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { fetchItemCategories, raiseComplaint, UploadImage } from "../api/api";
-import { AppButton, Field, Screen } from "../components/ui";
+import { AppButton, AppHeader, Field, IconButton, Panel, Screen, SectionHeader, useAppAlert } from "../components/ui";
 import { colors, radius, spacing, typography } from "../constants/theme";
 import type { RootStackParamList } from "../navigation/types";
 import { storage } from "../utils/storage";
@@ -13,6 +13,7 @@ type Props = NativeStackScreenProps<RootStackParamList, "RaiseComplaint">;
 const asUpload = (uri: string, name: string): UploadImage => ({ uri, name, type: "image/jpeg" });
 
 export default function RaiseComplaintScreen({ navigation }: Props) {
+  const alert = useAppAlert();
   const [customerName, setCustomerName] = useState("");
   const [description, setDescription] = useState("");
   const [address, setAddress] = useState("");
@@ -49,7 +50,7 @@ export default function RaiseComplaintScreen({ navigation }: Props) {
   const takePicture = async (target: "item" | "bill") => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert("Camera Permission", "Please allow camera access to click pictures.");
+      alert.show("Camera Permission", "Please allow camera access to click pictures.");
       return;
     }
 
@@ -68,7 +69,7 @@ export default function RaiseComplaintScreen({ navigation }: Props) {
   };
 
   const chooseImageSource = (target: "item" | "bill") => {
-    Alert.alert(
+    alert.show(
       target === "item" ? "Attach Item Image" : "Attach Bill Receipt",
       "Choose image source",
       [
@@ -81,11 +82,11 @@ export default function RaiseComplaintScreen({ navigation }: Props) {
 
   const submit = async () => {
     if (!customerName || !description || !item || !contact || !address || !itemImage) {
-      Alert.alert("Alert", "Name, description, item type, contact, address, and item image are required.");
+      alert.show("Alert", "Name, description, item type, contact, address, and item image are required.");
       return;
     }
     if (warranty && !billImage) {
-      Alert.alert("Alert", "Please attach bill image for warranty complaint.");
+      alert.show("Alert", "Please attach bill image for warranty complaint.");
       return;
     }
     setLoading(true);
@@ -101,10 +102,11 @@ export default function RaiseComplaintScreen({ navigation }: Props) {
         itemImage,
         billImage
       });
-      Alert.alert("Submitted", "Complaint submitted successfully.");
-      navigation.replace("Dashboard");
+      alert.show("Submitted", "Complaint submitted successfully.", [
+        { text: "Done", onPress: () => navigation.replace("Dashboard") }
+      ]);
     } catch {
-      Alert.alert("Error", "Unable to submit complaint.");
+      alert.show("Error", "Unable to submit complaint.");
     } finally {
       setLoading(false);
     }
@@ -114,18 +116,18 @@ export default function RaiseComplaintScreen({ navigation }: Props) {
     <Screen>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.keyboardAvoidingView}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
-          <View style={styles.header}>
-            <Text style={styles.title}>New Complaint</Text>
-            <Text style={styles.subtitle}>Fill in the details below to raise a new service request.</Text>
-          </View>
+          <AppHeader title="New Complaint" subtitle="Fill in the details below to raise a new service request." 
+          left={<IconButton icon="chevron-back" variant="soft" onPress={() => navigation.replace("Dashboard")} />}/>
 
-          <View style={styles.section}>
+          <Panel style={styles.section}>
+            <SectionHeader title="Customer Details" subtitle="We will use this for service coordination." />
             <Field label="Name" value={customerName} onChangeText={setCustomerName} placeholder="Enter your name" />
             <Field label="Contact" value={contact} onChangeText={setContact} placeholder="Enter contact" keyboardType="number-pad" maxLength={10} />
             <Field label="Address" value={address} onChangeText={setAddress} placeholder="Enter address" multiline />
-          </View>
+          </Panel>
 
-          <View style={styles.section}>
+          <Panel style={styles.section}>
+            <SectionHeader title="Complaint" subtitle="Describe the item and issue clearly." />
             <Field label="Complaint Description" value={description} onChangeText={setDescription} placeholder="Enter complaint description" multiline style={[styles.textArea, { minHeight: 100, color: "white" }]} />
             
             <Field label="Item Type" value={item} onChangeText={setItem} placeholder="Select or enter item type" />
@@ -138,10 +140,10 @@ export default function RaiseComplaintScreen({ navigation }: Props) {
                 ))}
               </View>
             ) : null}
-          </View>
+          </Panel>
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Attachments</Text>
+          <Panel style={styles.section}>
+            <SectionHeader title="Attachments" subtitle="Add item photos and bill when warranty applies." />
             <ImagePickerButton title="Attach Item Image" image={itemImage} onPress={() => chooseImageSource("item")} />
             
             <Pressable style={styles.warranty} onPress={() => setWarranty(value => !value)}>
@@ -152,7 +154,7 @@ export default function RaiseComplaintScreen({ navigation }: Props) {
             </Pressable>
             
             {warranty ? <ImagePickerButton title="Attach Bill Receipt" image={billImage} onPress={() => chooseImageSource("bill")} /> : null}
-          </View>
+          </Panel>
 
           <AppButton title="Submit Complaint" loading={loading} onPress={submit} style={styles.submitBtn} />
         </ScrollView>
@@ -178,25 +180,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingBottom: spacing.xxl
   },
-  header: {
-    marginBottom: spacing.xl,
-    marginTop: spacing.md,
-  },
-  title: {
-    ...typography.heading1,
-    color: colors.text,
-  },
-  subtitle: {
-    ...typography.body1,
-    color: colors.textSecondary,
-    marginTop: spacing.xs,
-  },
   section: {
-    backgroundColor: colors.panel,
-    padding: spacing.md,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
     marginBottom: spacing.md,
   },
   sectionTitle: {

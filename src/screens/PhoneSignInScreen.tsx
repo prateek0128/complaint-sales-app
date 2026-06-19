@@ -1,10 +1,11 @@
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import * as Application from "expo-application";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Platform, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Platform, StyleSheet, View } from "react-native";
 import { WebView } from "react-native-webview";
 import { loginWithPhone, getInfo } from "../api/api";
-import { colors } from "../constants/theme";
+import { useAppAlert } from "../components/ui";
+import { colors, radius, shadows } from "../constants/theme";
 import type { RootStackParamList } from "../navigation/types";
 import { addSubscribeTopic } from "../utils/notifications";
 import { storage } from "../utils/storage";
@@ -35,6 +36,7 @@ function decodeBase64(str: string): string {
 }
 
 export default function PhoneSignInScreen({ navigation }: Props) {
+  const alert = useAppAlert();
   const [deviceId, setDeviceId] = useState("");
   const [processing, setProcessing] = useState(false);
 
@@ -59,8 +61,9 @@ export default function PhoneSignInScreen({ navigation }: Props) {
     try {
       const parts = encodedJWT.split(".");
       if (parts.length !== 3) {
-        Alert.alert("Login Failed", "Invalid token received.");
-        navigation.goBack();
+        alert.show("Login Failed", "Invalid token received.", [
+          { text: "OK", onPress: () => navigation.goBack() }
+        ]);
         return;
       }
 
@@ -70,8 +73,9 @@ export default function PhoneSignInScreen({ navigation }: Props) {
       const rawPhone: string = String(payload.phone_no ?? "").trim();
 
       if (!rawPhone) {
-        Alert.alert("Login Failed", "Could not retrieve phone number.");
-        navigation.goBack();
+        alert.show("Login Failed", "Could not retrieve phone number.", [
+          { text: "OK", onPress: () => navigation.goBack() }
+        ]);
         return;
       }
 
@@ -79,8 +83,9 @@ export default function PhoneSignInScreen({ navigation }: Props) {
       const body = response.data as Record<string, unknown>;
 
       if (body.message !== "Login successful!") {
-        Alert.alert("Failed", "Your Number is not Registered");
-        navigation.goBack();
+        alert.show("Failed", "Your Number is not Registered", [
+          { text: "OK", onPress: () => navigation.goBack() }
+        ]);
         return;
       }
 
@@ -106,6 +111,7 @@ export default function PhoneSignInScreen({ navigation }: Props) {
         await storage.setInfoNumber(String(details.Contact ?? savedPhone));
         await storage.setInfoAddress(String(details.Location ?? ""));
         await storage.setInfoProfile(String(details.Profile_Picture ?? ""));
+        await storage.setInfoGender(String(details.Gender ?? details.gender ?? ""));
         await storage.setSubscribeToken(String(details.SubscribeToken ?? ""));
         await storage.setAdminToken(String(details.AdminToken ?? ""));
       }
@@ -119,8 +125,9 @@ export default function PhoneSignInScreen({ navigation }: Props) {
       const serverMessage =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
       console.error("PhoneSignIn error:", err);
-      Alert.alert("Login Failed", serverMessage ?? "Unable to login. Please try again.");
-      navigation.goBack();
+      alert.show("Login Failed", serverMessage ?? "Unable to login. Please try again.", [
+        { text: "OK", onPress: () => navigation.goBack() }
+      ]);
     } finally {
       setProcessing(false);
     }
@@ -132,7 +139,9 @@ export default function PhoneSignInScreen({ navigation }: Props) {
     <View style={styles.container}>
       {processing && (
         <View style={styles.overlay}>
-          <ActivityIndicator size="large" color={colors.red} />
+          <View style={styles.loadingCard}>
+            <ActivityIndicator size="large" color={colors.primaryLight} />
+          </View>
         </View>
       )}
       <WebView source={{ uri }} style={styles.webView} onMessage={handleMessage} />
@@ -149,5 +158,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     zIndex: 10
+  },
+  loadingCard: {
+    width: 96,
+    height: 96,
+    borderRadius: radius.xl,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.panel,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.lg,
   }
 });

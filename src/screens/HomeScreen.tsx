@@ -3,9 +3,9 @@ import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { FlatList, Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { fetchCustomerComplaints, fetchTechnicianComplaints, getInfo } from "../api/api";
-import { Avatar, Card, Screen } from "../components/ui";
+import { Avatar, Card, EmptyState, LoadingState, Screen } from "../components/ui";
 import { colors, radius, shadows, spacing, typography } from "../constants/theme";
 import type { DashboardTabParamList, RootStackParamList } from "../navigation/types";
 import { Complaint, formatDateTime, pickList, pickObject, statusColor } from "../utils/data";
@@ -16,6 +16,34 @@ type Props = CompositeScreenProps<BottomTabScreenProps<DashboardTabParamList, "H
 type ComplaintFilter = "all" | "active" | "pending" | "resolved" | "cancelled";
 
 const normalizeStatus = (status?: string) => String(status ?? "").trim().toLowerCase();
+const normalizeSearch = (value: unknown) => String(value ?? "").trim().toLowerCase();
+
+const complaintSearchText = (item: Complaint) => {
+  const created = formatDateTime(item.createdAt);
+  const updated = formatDateTime(item.updatedAt);
+  const products = item.productsAssigned
+    ?.flatMap(product => [product.repairPart, product.description, product.quantityAssigned])
+    .join(" ");
+
+  return normalizeSearch([
+    item.complaintId,
+    item.status,
+    item.item,
+    item.itemType,
+    item.description,
+    item.customerName,
+    item.contact,
+    item.address,
+    item.location,
+    item.technicianId,
+    item.otp,
+    created.date,
+    created.time,
+    updated.date,
+    updated.time,
+    products,
+  ].join(" "));
+};
 
 export default function HomeScreen({ navigation }: Props) {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
@@ -23,7 +51,9 @@ export default function HomeScreen({ navigation }: Props) {
   const [accountType, setAccountType] = useState(0);
   const [name, setName] = useState("");
   const [profile, setProfile] = useState("");
+  const [gender, setGender] = useState("");
   const [tab, setTab] = useState<ComplaintFilter>("all");
+  const [search, setSearch] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -38,6 +68,9 @@ export default function HomeScreen({ navigation }: Props) {
       const displayName = `${details.First_Name ?? ""} ${details.Last_Name ?? ""}`.trim();
       setName(displayName || (await storage.getInfoName()));
       setProfile(String(details.Profile_Picture ?? ""))
+      const fetchedGender = String(details.Gender ?? details.gender ?? "");
+      setGender(fetchedGender || (await storage.getInfoGender()));
+      if (fetchedGender) await storage.setInfoGender(fetchedGender);
       const savedSubscribeToken = typeof details.SubscribeToken === "string" ? details.SubscribeToken.trim() : "";
       await storage.setSubscribeToken(savedSubscribeToken || notificationTopicForAccount(type, userId));
       await storage.setAdminToken(String(details.AdminToken ?? ""));
@@ -48,6 +81,7 @@ export default function HomeScreen({ navigation }: Props) {
       setComplaints([]);
       setName(await storage.getInfoName());
       setProfile(await storage.getInfoProfile());
+      setGender(await storage.getInfoGender());
     } finally {
       setLoading(false);
     }
@@ -64,15 +98,21 @@ export default function HomeScreen({ navigation }: Props) {
   );
 
   const visible = useMemo(() => {
+    const searchTerm = normalizeSearch(search);
     return complaints.filter(item => {
       const status = normalizeStatus(item.status);
-      if (tab === "all") return true;
-      if (tab === "resolved") return status === "completed" || status === "resolved";
-      if (tab === "pending") return status === "pending";
-      if (tab === "cancelled") return status === "cancelled" || status === "canceled";
-      return status === "inprogress" || status === "in progress" || status === "active";
+      const matchesTab =
+        tab === "all" ? true :
+        tab === "resolved" ? status === "completed" || status === "resolved" :
+        tab === "pending" ? status === "pending" :
+        tab === "cancelled" ? status === "cancelled" || status === "canceled" :
+        status === "inprogress" || status === "in progress" || status === "active";
+
+      if (!matchesTab) return false;
+      if (!searchTerm) return true;
+      return complaintSearchText(item).includes(searchTerm);
     });
-  }, [complaints, tab]);
+  }, [complaints, search, tab]);
 
   const activeCount = complaints.filter(item => {
     const status = normalizeStatus(item.status);
@@ -91,7 +131,7 @@ export default function HomeScreen({ navigation }: Props) {
   return (
     <Screen>
       <View style={styles.userCard}>
-        <Avatar uri={profile} />
+        <Avatar uri={profile} gender={gender} />
         <View style={{ flex: 1 }}>
           <Text style={styles.welcome}>Welcome back,</Text>
           <Text style={styles.name}>{name || "User"}</Text>
@@ -118,15 +158,34 @@ export default function HomeScreen({ navigation }: Props) {
         </ScrollView>
       </View>
 
+      <View style={styles.searchShell}>
+        <Ionicons name="search-outline" size={20} color={colors.textSecondary} />
+        <TextInput
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Search complaints by anything"
+          placeholderTextColor={colors.subtle}
+          selectionColor={colors.primaryLight}
+          autoCapitalize="none"
+          autoCorrect={false}
+          style={styles.searchInput}
+        />
+        {search ? (
+          <Pressable onPress={() => setSearch("")} hitSlop={10} style={styles.searchClear}>
+            <Ionicons name="close" size={18} color={colors.textSecondary} />
+          </Pressable>
+        ) : null}
+      </View>
+
       {loading ? (
-        <ActivityIndicator color={colors.primary} size="large" style={{ marginTop: spacing.xxl }} />
+        <LoadingState label="Fetching complaints..." />
       ) : (
         <FlatList
           data={visible}
           keyExtractor={(item, index) => String(item.complaintId ?? index)}
           refreshControl={<RefreshControl refreshing={loading} onRefresh={load} tintColor={colors.primary} />}
-          ListEmptyComponent={<Text style={styles.empty}>No complaints found.</Text>}
-          contentContainerStyle={{ paddingBottom: 100 }}
+          ListEmptyComponent={<EmptyState title="No complaints found" message={search ? "Try a different search term or filter." : "New service requests will appear here."} />}
+          contentContainerStyle={{ paddingBottom: 168 }}
           renderItem={({ item }) => <ComplaintCard item={item} onPress={() => navigation.navigate("ComplaintDetails", { complaintId: item.complaintId, complaint: item })} />}
         />
       )}
@@ -182,16 +241,20 @@ function ComplaintCard({ item, onPress }: { item: Complaint; onPress: () => void
     <Card onPress={onPress} style={styles.complaintCard}>
       <View style={styles.complaintCardContent}>
         <View style={styles.complaintMain}>
-          <Text style={styles.complaintTitle} numberOfLines={1}>
-            Complaint ID: {item.complaintId ?? "NA"}
+          <View style={styles.complaintTitleRow}>
+            <Text style={styles.complaintTitle} numberOfLines={1}>#{item.complaintId ?? "NA"}</Text>
+            <View style={[styles.statusPill, { backgroundColor: statusColor(item.status) + "22", borderColor: statusColor(item.status) + "55" }]}>
+              <Text style={[styles.statusPillText, { color: statusColor(item.status) }]} numberOfLines={1}>{item.status ?? "NA"}</Text>
+            </View>
+          </View>
+          <Text style={styles.complaintItemLabel} numberOfLines={1}>
+            {String(type).toUpperCase()}
           </Text>
           <Text style={styles.complaintDesc} numberOfLines={2}>
             <Text style={styles.complaintDescLabel}>Description: </Text>
             {item.description ?? item.location ?? "No description provided."}
           </Text>
-          <Text style={[styles.complaintStatus, { color: statusColor(item.status) }]} numberOfLines={1}>
-            Status: {item.status ?? "NA"}
-          </Text>
+          
           <View style={styles.complaintMetaRow}>
             <View style={styles.complaintMetaItem}>
               <Ionicons name="calendar-outline" size={18} color={colors.textSecondary} />
@@ -207,10 +270,9 @@ function ComplaintCard({ item, onPress }: { item: Complaint; onPress: () => void
             </View>
           </View>
         </View>
+
         <View style={styles.complaintMedia}>
-          <Text style={styles.complaintItemLabel} numberOfLines={1}>
-            {String(type).toUpperCase()}
-          </Text>
+        
           {imageUri ? (
             <Image source={{ uri: imageUri }} style={styles.complaintThumb} />
           ) : (
@@ -230,7 +292,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     alignItems: "center",
     backgroundColor: colors.panel,
-    borderRadius: radius.lg,
+    borderRadius: radius.xl,
     padding: spacing.md,
     marginTop: spacing.sm,
     borderWidth: 1,
@@ -253,7 +315,7 @@ const styles = StyleSheet.create({
   stat: {
     flex: 1,
     minHeight: 72,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     padding: spacing.sm,
     flexDirection: "row",
     alignItems: "center",
@@ -284,7 +346,7 @@ const styles = StyleSheet.create({
   tabsShell: {
     marginBottom: spacing.md,
     backgroundColor: colors.panel,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     minHeight: 52,
     justifyContent: "center",
     overflow: "hidden",
@@ -300,7 +362,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
   },
   tab: {
-    minWidth: 80,
+    minWidth: 50,
     minHeight: 42,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.sm,
@@ -320,19 +382,40 @@ const styles = StyleSheet.create({
   tabTextActive: {
     color: colors.text,
   },
-  empty: {
+  searchShell: {
+    minHeight: 54,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    backgroundColor: colors.panel,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radius.lg,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.md,
+    ...shadows.sm,
+  },
+  searchInput: {
+    flex: 1,
+    minHeight: 52,
     ...typography.body1,
-    color: colors.muted,
-    textAlign: "center",
-    marginTop: spacing.xxl,
+    color: colors.text,
+  },
+  searchClear: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.panelAlt,
   },
   complaintCard: {
-    backgroundColor: colors.black,
-    borderColor: "rgba(255,255,255,0.05)",
-    borderRadius: 20,
-    paddingVertical: spacing.lg,
+    backgroundColor: colors.panel,
+    borderColor: colors.border,
+    borderRadius: radius.xl,
+    paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
-    minHeight: 150,
+    minHeight: 144,
   },
   complaintCardContent: {
     flexDirection: "row",
@@ -344,10 +427,27 @@ const styles = StyleSheet.create({
     minWidth: 0,
     gap: spacing.sm,
   },
+  complaintTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+  },
   complaintTitle: {
     color: colors.white,
-    fontSize: 20,
-    fontWeight: "800",
+    fontSize: 22,
+    fontWeight: "900",
+  },
+  statusPill: {
+    maxWidth: 120,
+    borderWidth: 1,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  statusPillText: {
+    ...typography.caption,
+    fontWeight: "900",
   },
   complaintDesc: {
     color: colors.textSecondary,
@@ -358,10 +458,6 @@ const styles = StyleSheet.create({
   complaintDescLabel: {
     color: colors.textSecondary,
     fontWeight: "800",
-  },
-  complaintStatus: {
-    fontSize: 17,
-    fontWeight: "900",
   },
   complaintMetaRow: {
     flexDirection: "row",
@@ -388,10 +484,10 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   complaintItemLabel: {
-    color: colors.error,
-    fontSize: 17,
+    color: colors.primaryLight,
+    fontSize: 14,
     fontWeight: "900",
-    textAlign: "right",
+    //textAlign: "right",
   },
   complaintThumb: {
     width: 86,
@@ -410,7 +506,7 @@ const styles = StyleSheet.create({
   fab: {
     position: "absolute",
     right: spacing.lg,
-    bottom: spacing.lg,
+    bottom: 96,
     width: 64,
     height: 64,
     borderRadius: 32,
