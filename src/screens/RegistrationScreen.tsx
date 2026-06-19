@@ -1,7 +1,7 @@
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
-import { Alert, Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { registerCustomer, UploadImage } from "../api/api";
 import { AppButton, Field, Screen } from "../components/ui";
 import { colors } from "../constants/theme";
@@ -49,26 +49,32 @@ export default function RegistrationScreen({ navigation }: Props) {
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>New Registration</Text>
-        <Field label="First Name" value={firstName} onChangeText={setFirstName} placeholder="Enter first name" />
-        <Field label="Last Name" value={lastName} onChangeText={setLastName} placeholder="Enter last name" />
-        <Field label="Email" value={email} onChangeText={setEmail} placeholder="Enter email" keyboardType="email-address" />
-        <Field label="Gender" value={gender} onChangeText={setGender} placeholder="Male / Female" />
-        <Field label="Contact" value={contact} onChangeText={setContact} placeholder="Enter contact" keyboardType="number-pad" maxLength={10} />
-        <Field label="Location" value={location} onChangeText={setLocation} placeholder="Enter address" multiline />
-        <View style={styles.previewRow}>
-          {profileImage ? <Image source={{ uri: profileImage.uri }} style={styles.preview} /> : null}
-          <AppButton title="Choose Profile Image" icon="image-outline" onPress={pickImage} />
-        </View>
-        <AppButton title="Register" loading={loading} onPress={submit} />
-      </ScrollView>
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.keyboardAvoidingView}>
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
+          <Text style={styles.title}>New Registration</Text>
+          <Field label="First Name" value={firstName} onChangeText={setFirstName} placeholder="Enter first name" />
+          <Field label="Last Name" value={lastName} onChangeText={setLastName} placeholder="Enter last name" />
+          <Field label="Email" value={email} onChangeText={setEmail} placeholder="Enter email" keyboardType="email-address" />
+          <Field label="Gender" value={gender} onChangeText={setGender} placeholder="Male / Female" />
+          <Field label="Contact" value={contact} onChangeText={setContact} placeholder="Enter contact" keyboardType="number-pad" maxLength={10} />
+          <Field label="Location" value={location} onChangeText={setLocation} placeholder="Enter address" multiline />
+          <View style={styles.previewRow}>
+            {profileImage ? <Image source={{ uri: profileImage.uri }} style={styles.preview} /> : null}
+            <AppButton title="Choose Profile Image" icon="image-outline" onPress={pickImage} />
+          </View>
+          <AppButton title="Register" loading={loading} onPress={submit} />
+        </ScrollView>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  keyboardAvoidingView: {
+    flex: 1,
+  },
   content: {
+    flexGrow: 1,
     paddingBottom: 36
   },
   title: {

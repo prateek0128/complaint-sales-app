@@ -1,7 +1,7 @@
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import * as ImagePicker from "expo-image-picker";
 import { useEffect, useState } from "react";
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { fetchItemCategories, raiseComplaint, UploadImage } from "../api/api";
 import { AppButton, Field, Screen } from "../components/ui";
 import { colors, radius, spacing, typography } from "../constants/theme";
@@ -112,49 +112,51 @@ export default function RaiseComplaintScreen({ navigation }: Props) {
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <View style={styles.header}>
-          <Text style={styles.title}>New Complaint</Text>
-          <Text style={styles.subtitle}>Fill in the details below to raise a new service request.</Text>
-        </View>
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.keyboardAvoidingView}>
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
+          <View style={styles.header}>
+            <Text style={styles.title}>New Complaint</Text>
+            <Text style={styles.subtitle}>Fill in the details below to raise a new service request.</Text>
+          </View>
 
-        <View style={styles.section}>
-          <Field label="Name" value={customerName} onChangeText={setCustomerName} placeholder="Enter your name" />
-          <Field label="Contact" value={contact} onChangeText={setContact} placeholder="Enter contact" keyboardType="number-pad" maxLength={10} />
-          <Field label="Address" value={address} onChangeText={setAddress} placeholder="Enter address" multiline />
-        </View>
+          <View style={styles.section}>
+            <Field label="Name" value={customerName} onChangeText={setCustomerName} placeholder="Enter your name" />
+            <Field label="Contact" value={contact} onChangeText={setContact} placeholder="Enter contact" keyboardType="number-pad" maxLength={10} />
+            <Field label="Address" value={address} onChangeText={setAddress} placeholder="Enter address" multiline />
+          </View>
 
-        <View style={styles.section}>
-          <Field label="Complaint Description" value={description} onChangeText={setDescription} placeholder="Enter complaint description" multiline style={[styles.textArea, { minHeight: 100, color: "white" }]} />
-          
-          <Field label="Item Type" value={item} onChangeText={setItem} placeholder="Select or enter item type" />
-          {items.length ? (
-            <View style={styles.chips}>
-              {items.map(value => (
-                <Pressable key={value} style={[styles.chip, item === value && styles.chipActive]} onPress={() => setItem(value)}>
-                  <Text style={[styles.chipText, item === value && styles.chipTextActive]}>{value}</Text>
-                </Pressable>
-              ))}
-            </View>
-          ) : null}
-        </View>
+          <View style={styles.section}>
+            <Field label="Complaint Description" value={description} onChangeText={setDescription} placeholder="Enter complaint description" multiline style={[styles.textArea, { minHeight: 100, color: "white" }]} />
+            
+            <Field label="Item Type" value={item} onChangeText={setItem} placeholder="Select or enter item type" />
+            {items.length ? (
+              <View style={styles.chips}>
+                {items.map(value => (
+                  <Pressable key={value} style={[styles.chip, item === value && styles.chipActive]} onPress={() => setItem(value)}>
+                    <Text style={[styles.chipText, item === value && styles.chipTextActive]}>{value}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            ) : null}
+          </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Attachments</Text>
-          <ImagePickerButton title="Attach Item Image" image={itemImage} onPress={() => chooseImageSource("item")} />
-          
-          <Pressable style={styles.warranty} onPress={() => setWarranty(value => !value)}>
-            <Text style={styles.warrantyText}>Product in Warranty?</Text>
-            <View style={[styles.toggle, warranty && styles.toggleActive]}>
-              <Text style={styles.toggleText}>{warranty ? "YES" : "NO"}</Text>
-            </View>
-          </Pressable>
-          
-          {warranty ? <ImagePickerButton title="Attach Bill Receipt" image={billImage} onPress={() => chooseImageSource("bill")} /> : null}
-        </View>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Attachments</Text>
+            <ImagePickerButton title="Attach Item Image" image={itemImage} onPress={() => chooseImageSource("item")} />
+            
+            <Pressable style={styles.warranty} onPress={() => setWarranty(value => !value)}>
+              <Text style={styles.warrantyText}>Product in Warranty?</Text>
+              <View style={[styles.toggle, warranty && styles.toggleActive]}>
+                <Text style={styles.toggleText}>{warranty ? "YES" : "NO"}</Text>
+              </View>
+            </Pressable>
+            
+            {warranty ? <ImagePickerButton title="Attach Bill Receipt" image={billImage} onPress={() => chooseImageSource("bill")} /> : null}
+          </View>
 
-        <AppButton title="Submit Complaint" loading={loading} onPress={submit} style={styles.submitBtn} />
-      </ScrollView>
+          <AppButton title="Submit Complaint" loading={loading} onPress={submit} style={styles.submitBtn} />
+        </ScrollView>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }
@@ -169,7 +171,11 @@ function ImagePickerButton({ title, image, onPress }: { title: string; image: Up
 }
 
 const styles = StyleSheet.create({
+  keyboardAvoidingView: {
+    flex: 1,
+  },
   content: {
+    flexGrow: 1,
     paddingBottom: spacing.xxl
   },
   header: {
