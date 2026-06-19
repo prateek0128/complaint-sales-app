@@ -1,3 +1,5 @@
+import { Platform } from "react-native";
+
 export const colors = {
   background: "#0B1020",
   backgroundElevated: "#10172A",
@@ -34,15 +36,23 @@ export const spacing = {
   xxl: 48,
 };
 
+export const fonts = {
+  regular: Platform.select({ ios: "Avenir Next", android: "sans-serif", default: "System" }),
+  medium: Platform.select({ ios: "Avenir Next", android: "sans-serif-medium", default: "System" }),
+  semibold: Platform.select({ ios: "Avenir Next Demi Bold", android: "sans-serif-medium", default: "System" }),
+  bold: Platform.select({ ios: "Avenir Next Bold", android: "sans-serif-condensed", default: "System" }),
+  heavy: Platform.select({ ios: "Avenir Next Heavy", android: "sans-serif-condensed", default: "System" }),
+};
+
 export const typography = {
-  display: { fontSize: 36, lineHeight: 42, fontWeight: "900" as const, color: colors.text },
-  heading1: { fontSize: 30, lineHeight: 36, fontWeight: "900" as const, color: colors.text },
-  heading2: { fontSize: 24, lineHeight: 30, fontWeight: "800" as const, color: colors.text },
-  heading3: { fontSize: 18, lineHeight: 24, fontWeight: "800" as const, color: colors.text },
-  body1: { fontSize: 16, lineHeight: 24, fontWeight: "500" as const, color: colors.text },
-  body2: { fontSize: 14, lineHeight: 21, fontWeight: "500" as const, color: colors.textSecondary },
-  caption: { fontSize: 12, lineHeight: 16, fontWeight: "600" as const, color: colors.muted },
-  button: { fontSize: 15, lineHeight: 20, fontWeight: "800" as const, color: colors.white },
+  display: { fontFamily: fonts.heavy, fontSize: 36, lineHeight: 42, fontWeight: "900" as const, color: colors.text },
+  heading1: { fontFamily: fonts.heavy, fontSize: 30, lineHeight: 36, fontWeight: "900" as const, color: colors.text },
+  heading2: { fontFamily: fonts.bold, fontSize: 24, lineHeight: 30, fontWeight: "800" as const, color: colors.text },
+  heading3: { fontFamily: fonts.bold, fontSize: 18, lineHeight: 24, fontWeight: "800" as const, color: colors.text },
+  body1: { fontFamily: fonts.medium, fontSize: 16, lineHeight: 24, fontWeight: "500" as const, color: colors.text },
+  body2: { fontFamily: fonts.regular, fontSize: 14, lineHeight: 21, fontWeight: "500" as const, color: colors.textSecondary },
+  caption: { fontFamily: fonts.semibold, fontSize: 12, lineHeight: 16, fontWeight: "600" as const, color: colors.muted },
+  button: { fontFamily: fonts.bold, fontSize: 15, lineHeight: 20, fontWeight: "800" as const, color: colors.white },
 };
 
 export const radius = {

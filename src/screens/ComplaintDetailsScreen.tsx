@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { deleteComplaint, fetchComplaintDetails, fetchAssignedTechDetails, generateInvoice } from "../api/api";
 import { AppButton, AppHeader, IconButton, Panel, Screen, SectionHeader, useAppAlert } from "../components/ui";
-import { colors, radius, spacing, typography } from "../constants/theme";
+import { colors, fonts, radius, spacing, typography } from "../constants/theme";
 // import { PUBLIC_INVOICE_CREATE_URL } from "../constants/urls";
 import type { RootStackParamList } from "../navigation/types";
 import { Complaint, formatDateTime, pickObject, statusColor, mapComplaint } from "../utils/data";
@@ -360,11 +360,11 @@ const styles = StyleSheet.create({
   infoRow: { paddingVertical: spacing.sm, gap: 4, borderBottomWidth: 1, borderBottomColor: colors.border },
   infoLabel: { ...typography.caption, color: colors.muted },
   infoValue: { ...typography.body1, color: colors.text },
-  bold: { fontWeight: "900" },
+  bold: { fontFamily: fonts.heavy, fontWeight: "900" },
   heroImageButton: { position: "relative", borderRadius: radius.xl, overflow: "hidden" },
   heroImage: { width: "100%", height: 220, borderRadius: radius.xl, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.border },
   imageHint: { position: "absolute", right: spacing.md, bottom: spacing.md, flexDirection: "row", alignItems: "center", gap: spacing.xs, backgroundColor: "rgba(2,6,23,0.72)", borderColor: "rgba(255,255,255,0.16)", borderWidth: 1, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
-  imageHintText: { ...typography.caption, color: colors.white, fontWeight: "800" },
+  imageHintText: { ...typography.caption, fontFamily: fonts.bold, color: colors.white, fontWeight: "800" },
   previewOverlay: { flex: 1, backgroundColor: "rgba(2,6,23,0.96)", alignItems: "center", justifyContent: "center", padding: spacing.md },
   previewHeader: { position: "absolute", top: spacing.xl, left: spacing.md, right: spacing.md, zIndex: 2, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   previewTitle: { ...typography.heading3, color: colors.white },
@@ -372,16 +372,16 @@ const styles = StyleSheet.create({
   previewImage: { width: "100%", height: "82%" },
   pressed: { opacity: 0.86 },
   partRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm, paddingVertical: spacing.md, borderBottomColor: colors.border, borderBottomWidth: 1 },
-  partName: { color: colors.text, fontWeight: "900" },
-  partDesc: { color: colors.muted, fontSize: 12, marginTop: 2 },
+  partName: { ...typography.body1, fontFamily: fonts.heavy, color: colors.text, fontWeight: "900" },
+  partDesc: { ...typography.caption, fontFamily: fonts.regular, color: colors.muted, marginTop: 2 },
   qtyStepper: { flexDirection: "row", alignItems: "center", borderColor: colors.border, borderWidth: 1, borderRadius: radius.md, overflow: "hidden" },
   qtyButton: { width: 34, height: 42, alignItems: "center", justifyContent: "center", backgroundColor: colors.panelAlt },
   qtyButtonDisabled: { opacity: 0.45 },
-  qty: { width: 48, height: 42, color: colors.text, textAlign: "center", borderLeftColor: colors.border, borderLeftWidth: 1, borderRightColor: colors.border, borderRightWidth: 1 },
+  qty: { ...typography.body2, fontFamily: fonts.semibold, width: 48, height: 42, color: colors.text, textAlign: "center", borderLeftColor: colors.border, borderLeftWidth: 1, borderRightColor: colors.border, borderRightWidth: 1 },
   checkBox: { width: 26, height: 26, borderRadius: 4, alignItems: "center", justifyContent: "center", backgroundColor: colors.transparent, borderWidth: 2, borderColor: colors.border },
   checkBoxSelected: { backgroundColor: colors.success, borderColor: colors.success },
   checkBoxDisabled: { opacity: 0.55 },
   statusBadge: { borderWidth: 1, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
-  statusBadgeText: { ...typography.caption, fontWeight: "900" },
+  statusBadgeText: { ...typography.caption, fontFamily: fonts.heavy, fontWeight: "900" },
   muted: { ...typography.body2, color: colors.muted, textAlign: "center", paddingVertical: spacing.md }
 });

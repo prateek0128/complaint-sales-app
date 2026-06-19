@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { AppHeader, Avatar, Card, ListItem, Screen } from "../components/ui";
-import { colors, radius, spacing, typography } from "../constants/theme";
+import { colors, fonts, radius, spacing, typography } from "../constants/theme";
 import type { DashboardTabParamList, RootStackParamList } from "../navigation/types";
 import { storage } from "../utils/storage";
 
@@ -108,6 +108,7 @@ const styles = StyleSheet.create({
   },
   copy: {
     ...typography.body1,
+    fontFamily: fonts.semibold,
     fontWeight: "700",
     color: colors.text,
     marginBottom: spacing.xs,

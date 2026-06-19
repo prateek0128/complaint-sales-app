@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { FlatList, Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { fetchCustomerComplaints, fetchTechnicianComplaints, getInfo } from "../api/api";
 import { Avatar, Card, EmptyState, LoadingState, Screen } from "../components/ui";
-import { colors, radius, shadows, spacing, typography } from "../constants/theme";
+import { colors, fonts, radius, shadows, spacing, typography } from "../constants/theme";
 import type { DashboardTabParamList, RootStackParamList } from "../navigation/types";
 import { Complaint, formatDateTime, pickList, pickObject, statusColor } from "../utils/data";
 import { addSubscribeTopic, notificationTopicForAccount, showWelcomeNotificationOnce } from "../utils/notifications";
@@ -335,11 +335,13 @@ const styles = StyleSheet.create({
   },
   statTitle: {
     ...typography.caption,
+    fontFamily: fonts.semibold,
     color: colors.textSecondary,
     fontWeight: "600",
   },
   statCount: {
-    fontSize: 22,
+    ...typography.heading2,
+    fontFamily: fonts.bold,
     fontWeight: "800",
     color: colors.text,
   },
@@ -375,11 +377,15 @@ const styles = StyleSheet.create({
     ...shadows.sm,
   },
   tabText: {
-    fontSize: 13,
+    ...typography.button,
+    fontFamily: fonts.bold,
     fontWeight: "600",
+    letterSpacing: 0.2,
     color: colors.muted,
   },
   tabTextActive: {
+    fontFamily: fonts.heavy,
+    fontWeight: "900",
     color: colors.text,
   },
   searchShell: {
@@ -434,8 +440,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   complaintTitle: {
+    ...typography.heading2,
+    fontFamily: fonts.heavy,
     color: colors.white,
-    fontSize: 22,
     fontWeight: "900",
   },
   statusPill: {
@@ -447,15 +454,18 @@ const styles = StyleSheet.create({
   },
   statusPillText: {
     ...typography.caption,
+    fontFamily: fonts.heavy,
     fontWeight: "900",
   },
   complaintDesc: {
+    ...typography.body1,
+    fontFamily: fonts.semibold,
     color: colors.textSecondary,
-    fontSize: 16,
     lineHeight: 23,
     fontWeight: "600",
   },
   complaintDescLabel: {
+    fontFamily: fonts.bold,
     color: colors.textSecondary,
     fontWeight: "800",
   },
@@ -473,8 +483,9 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   complaintMetaText: {
+    ...typography.body2,
+    fontFamily: fonts.semibold,
     color: colors.textSecondary,
-    fontSize: 14,
     fontWeight: "700",
   },
   complaintMedia: {
@@ -484,10 +495,10 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   complaintItemLabel: {
+    ...typography.caption,
+    fontFamily: fonts.heavy,
     color: colors.primaryLight,
-    fontSize: 14,
     fontWeight: "900",
-    //textAlign: "right",
   },
   complaintThumb: {
     width: 86,

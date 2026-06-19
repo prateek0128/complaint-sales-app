@@ -15,7 +15,7 @@ import {
   ViewStyle
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { colors, radius, shadows, spacing, typography } from "../constants/theme";
+import { colors, fonts, radius, shadows, spacing, typography } from "../constants/theme";
 
 type IconName = keyof typeof Ionicons.glyphMap;
 type AppAlertButton = {
@@ -340,7 +340,7 @@ export function LoadingState({ label = "Loading..." }: { label?: string }) {
   return (
     <View style={styles.stateBox}>
       <ActivityIndicator color={colors.primaryLight} size="large" />
-      <AppText variant="body2" muted style={styles.stateMessage}>{label}</AppText>
+      <AppText variant="body2" muted style={[styles.stateMessage, styles.loadingLabel]}>{label}</AppText>
     </View>
   );
 }
@@ -530,9 +530,7 @@ export const styles = StyleSheet.create({
     opacity: 0.48,
   },
   buttonText: {
-    fontSize: typography.button.fontSize,
-    lineHeight: typography.button.lineHeight,
-    fontWeight: typography.button.fontWeight,
+    ...typography.button,
   },
   sectionHeader: {
     flexDirection: "row",
@@ -563,6 +561,11 @@ export const styles = StyleSheet.create({
   },
   stateMessage: {
     marginTop: spacing.xs,
+  },
+  loadingLabel: {
+    fontFamily: fonts.semibold,
+    letterSpacing: 0.2,
+    color: colors.primaryLight,
   },
   alertOverlay: {
     flex: 1,
