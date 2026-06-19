@@ -22,20 +22,18 @@ export default function SplashScreen({ navigation }: Props) {
 
     const run = async () => {
       try {
-        if (!__DEV__) {
-          setUpdateStatus("Checking for updates...");
-          const update = await Updates.checkForUpdateAsync();
-          if (update.isAvailable) {
-            setUpdateStatus("Downloading update...");
-            await Updates.fetchUpdateAsync();
-            setUpdateStatus("Update ready! Restarting...");
-            await Updates.reloadAsync();
-            return;
-          }
+        setUpdateStatus("Checking for updates...");
+        const update = await Updates.checkForUpdateAsync();
+        if (update.isAvailable) {
+          setUpdateStatus("Downloading update...");
+          await Updates.fetchUpdateAsync();
+          setUpdateStatus("Update ready! Restarting...");
+          await Updates.reloadAsync();
+          return;
         }
       } catch (updateError) {
         console.log("Update check failed:", updateError);
-        setUpdateStatus("Preparing your experience...");
+        setUpdateStatus("Preparing your experience…");
       }
 
       setUpdateStatus(null);
@@ -58,7 +56,7 @@ export default function SplashScreen({ navigation }: Props) {
       <Text style={styles.subtitle}>Complaint Service</Text>
       <View style={styles.statusRow}>
         <ActivityIndicator color={colors.primaryLight} size="small" />
-        <Text style={styles.status}>{updateStatus ?? "Preparing your workspace..."}</Text>
+        <Text style={styles.status}>{updateStatus ?updateStatus: "Preparing your workspace..."}</Text>
       </View>
     </View>
   );
