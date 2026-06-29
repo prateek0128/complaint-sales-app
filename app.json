@@ -5,15 +5,15 @@
     "scheme": "complaintsales",
     "version": "2.0.0",
     "orientation": "portrait",
-    "icon": "./assets/frame5.png",
+    "icon": "./assets/app_icon.png",
     "userInterfaceStyle": "dark",
     "splash": {
-      "image": "./assets/frameSplash.png",
+      "image": "./assets/app_icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#111111"
     },
     "notification": {
-      "icon": "./assets/frame5.png",
+      "icon": "./assets/app_icon.png",
       "color": "#6366F1"
     },
     "assetBundlePatterns": [
@@ -22,7 +22,7 @@
     "ios": {
       "supportsTablet": true,
       "buildNumber": "1",
-      "icon": "./assets/frame5.png",
+      "icon": "./assets/app_icon.png",
       "bundleIdentifier": "org.miiscollp.electroniccomplain",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
@@ -33,7 +33,7 @@
       "package": "org.miiscollp.electroniccomplain",
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/frame5.png",
+        "foregroundImage": "./assets/app_icon.png",
         "backgroundColor": "#111111"
       },
       "versionCode": 1,
@@ -43,7 +43,7 @@
     "web": {
       "bundler": "metro",
       "output": "single",
-      "favicon": "./assets/frame5.png"
+      "favicon": "./assets/app_icon.png"
     },
     "plugins": [
       "@react-native-firebase/app",
@@ -51,7 +51,7 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/frame5.png",
+          "icon": "./assets/app_icon.png",
           "color": "#6366F1"
         }
       ],
