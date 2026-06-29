@@ -22,8 +22,6 @@ public class AppDelegate: ExpoAppDelegate {
     reactNativeFactory = factory
     bindReactNativeFactory(factory)
 
-    FirebaseApp.configure()
-
 #if os(iOS) || os(tvOS)
     window = UIWindow(frame: UIScreen.main.bounds)
     factory.startReactNative(
