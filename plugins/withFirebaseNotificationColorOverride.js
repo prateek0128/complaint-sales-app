@@ -2,7 +2,8 @@ const { withDangerousMod } = require("@expo/config-plugins");
 const fs = require("fs");
 const path = require("path");
 
-const FCM_COLOR_TAG = 'android:name="com.google.firebase.messaging.default_notification_color"';
+const OLD_TAG = 'android:name="com.google.firebase.messaging.default_notification_color" android:resource="@color/notification_icon_color"/>';
+const NEW_TAG = 'android:name="com.google.firebase.messaging.default_notification_color" android:resource="@color/notification_icon_color" tools:replace="android:resource"/>';
 
 function withFirebaseNotificationColorOverride(config) {
   return withDangerousMod(config, [
@@ -15,15 +16,8 @@ function withFirebaseNotificationColorOverride(config) {
 
       let contents = fs.readFileSync(manifestPath, "utf-8");
 
-      // Add tools:replace if not already present on the FCM color meta-data tag
-      if (contents.includes(FCM_COLOR_TAG) && !contents.includes('tools:replace="android:resource"')) {
-        contents = contents.replace(
-          new RegExp(`(<meta-data ${FCM_COLOR_TAG.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[^/]*/?>)`),
-          (match) => {
-            if (match.includes('tools:replace')) return match;
-            return match.replace('/>', ' tools:replace="android:resource"/>');
-          }
-        );
+      if (contents.includes(OLD_TAG)) {
+        contents = contents.replace(OLD_TAG, NEW_TAG);
         fs.writeFileSync(manifestPath, contents);
       }
 
