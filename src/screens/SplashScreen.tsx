@@ -50,7 +50,7 @@ export default function SplashScreen({ navigation }: Props) {
   return (
     <View style={styles.root}>
       <View style={styles.logoShell}>
-        <Image source={require("../../assets/frameSplash.png")} style={styles.logo} resizeMode="contain" />
+        <Image source={require("../../assets/app_icon.png")} style={styles.logo} resizeMode="contain" />
       </View>
       <Text style={styles.title}>Maheshwari Infotech</Text>
       <Text style={styles.subtitle}>Complaint Service</Text>
