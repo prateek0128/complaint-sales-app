@@ -1,28 +1,35 @@
-const { withAndroidManifest } = require("@expo/config-plugins");
+const { withDangerousMod } = require("@expo/config-plugins");
+const fs = require("fs");
+const path = require("path");
 
-const FCM_NOTIFICATION_COLOR = "com.google.firebase.messaging.default_notification_color";
+const FCM_COLOR_TAG = 'android:name="com.google.firebase.messaging.default_notification_color"';
 
 function withFirebaseNotificationColorOverride(config) {
-  return withAndroidManifest(config, (config) => {
-    const manifest = config.modResults.manifest;
+  return withDangerousMod(config, [
+    "android",
+    (config) => {
+      const manifestPath = path.join(
+        config.modRequest.platformProjectRoot,
+        "app/src/main/AndroidManifest.xml"
+      );
 
-    // Ensure xmlns:tools is declared on the root manifest element
-    manifest.$ = manifest.$ || {};
-    manifest.$["xmlns:tools"] = "http://schemas.android.com/tools";
+      let contents = fs.readFileSync(manifestPath, "utf-8");
 
-    const application = manifest.application?.[0];
-    if (!application) return config;
-
-    application["meta-data"] = application["meta-data"] || [];
-
-    for (const item of application["meta-data"]) {
-      if (item.$?.["android:name"] === FCM_NOTIFICATION_COLOR) {
-        item.$["tools:replace"] = "android:resource";
+      // Add tools:replace if not already present on the FCM color meta-data tag
+      if (contents.includes(FCM_COLOR_TAG) && !contents.includes('tools:replace="android:resource"')) {
+        contents = contents.replace(
+          new RegExp(`(<meta-data ${FCM_COLOR_TAG.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[^/]*/?>)`),
+          (match) => {
+            if (match.includes('tools:replace')) return match;
+            return match.replace('/>', ' tools:replace="android:resource"/>');
+          }
+        );
+        fs.writeFileSync(manifestPath, contents);
       }
-    }
 
-    return config;
-  });
+      return config;
+    },
+  ]);
 }
 
 module.exports = withFirebaseNotificationColorOverride;
