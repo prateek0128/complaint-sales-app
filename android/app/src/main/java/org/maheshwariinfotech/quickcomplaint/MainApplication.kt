@@ -1,4 +1,4 @@
-package org.miiscollp.electroniccomplain
+package org.maheshwariinfotech.quickcomplaint
 
 import android.app.Application
 import android.content.res.Configuration

@@ -9,7 +9,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>org.miiscollp.electroniccomplain</string>
+	<string>org.maheshwariinfotech.quickcomplaint</string>
 	<key>PROJECT_ID</key>
 	<string>maheshwari-infotech</string>
 	<key>STORAGE_BUCKET</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:920285835577:ios:b28974ab0e7080495c78e8</string>
+	<string>1:920285835577:ios:da8c1308b0b1a0ae5c78e8</string>
 </dict>
 </plist>

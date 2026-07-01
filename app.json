@@ -23,14 +23,14 @@
       "supportsTablet": true,
       "buildNumber": "1",
       "icon": "./assets/app_icon.png",
-      "bundleIdentifier": "org.miiscollp.electroniccomplain",
+      "bundleIdentifier": "org.maheshwariinfotech.quickcomplaint",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "org.miiscollp.electroniccomplain",
+      "package": "org.maheshwariinfotech.quickcomplaint",
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/app_icon.png",

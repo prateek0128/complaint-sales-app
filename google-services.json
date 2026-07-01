@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "1035230545456",
-    "project_id": "miiscollpcomplaintapp",
-    "storage_bucket": "miiscollpcomplaintapp.appspot.com"
+    "project_number": "920285835577",
+    "project_id": "maheshwari-infotech",
+    "storage_bucket": "maheshwari-infotech.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1035230545456:android:b10000da5bcfc089becff5",
+        "mobilesdk_app_id": "1:920285835577:android:e507a67fd90acbac5c78e8",
         "android_client_info": {
-          "package_name": "org.miiscollp.electroniccomplain"
+          "package_name": "org.maheshwariinfotech.quickcomplaint"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCrcS_FzkEnhDfZAIHmdp_KfRAY9CrPufY"
+          "current_key": "AIzaSyB7REmtH2qKHIsa0ya6oC34ZMwVR3u2lqE"
         }
       ],
       "services": {

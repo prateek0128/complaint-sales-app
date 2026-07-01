@@ -28,7 +28,7 @@
         <key>CFBundleURLSchemes</key>
         <array>
           <string>complaintsales</string>
-          <string>org.miiscollp.electroniccomplain</string>
+          <string>org.maheshwariinfotech.quickcomplaint</string>
         </array>
       </dict>
       <dict>
